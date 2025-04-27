@@ -26,7 +26,7 @@ interface ManualInputFormProps {
 }
 
 const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState<ExpenseData>({
@@ -72,6 +72,11 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
       return;
     }
     
+    if (!session?.access_token) {
+      toast.error("Vous devez être connecté avec votre compte Google pour soumettre une dépense");
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -86,7 +91,10 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
       
       // Call the submission function from Supabase Edge Functions
       const { data, error } = await supabase.functions.invoke('submit-expense', {
-        body: expenseData
+        body: expenseData,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
       if (error) {
@@ -108,7 +116,7 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
       setDate(new Date());
     } catch (error) {
       console.error("Error submitting expense:", error);
-      toast.error("Erreur lors de la soumission de la dépense");
+      toast.error(`Erreur lors de la soumission de la dépense: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -155,7 +163,7 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
             <Button 
               type="submit"
               className="w-full gap-2"
-              disabled={loading}
+              disabled={loading || !session?.access_token}
             >
               {loading ? (
                 <>

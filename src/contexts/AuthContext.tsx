@@ -66,6 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
+          // Request additional scopes for Google Sheets access
+          scopes: 'https://www.googleapis.com/auth/spreadsheets',
         },
       });
       if (error) throw error;

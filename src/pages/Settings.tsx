@@ -1,9 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Form,
   FormControl,
@@ -13,7 +12,7 @@ import {
   FormLabel,
   FormMessage 
 } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,70 +23,101 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { FileSpreadsheet, Table2, Database } from "lucide-react";
+import { FileSpreadsheet, Table2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const settingsFormSchema = z.object({
-  spreadsheetUrl: z.string().url("Veuillez saisir une URL Google Sheets valide"),
+  spreadsheetId: z.string().min(1, "Veuillez saisir l'ID du Google Sheets"),
   sheetName: z.string().min(1, "Veuillez saisir le nom de la feuille"),
-  columnMappings: z.object({
-    date: z.string().min(1, "Veuillez spécifier une colonne"),
-    commercant: z.string().min(1, "Veuillez spécifier une colonne"),
-    montant_ttc: z.string().min(1, "Veuillez spécifier une colonne"),
-    categorie: z.string().min(1, "Veuillez spécifier une colonne"),
-    motif: z.string().optional(),
-  }),
 });
 
 type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
 const Settings = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-
-  // Les valeurs par défaut pour le formulaire pourraient venir d'une API ou du stockage local
-  const defaultValues: Partial<SettingsFormValues> = {
-    spreadsheetUrl: "",
+  
+  // Default values that will be updated if we have stored settings
+  const [defaultValues, setDefaultValues] = useState<Partial<SettingsFormValues>>({
+    spreadsheetId: "",
     sheetName: "Dépenses",
-    columnMappings: {
-      date: "A",
-      commercant: "B",
-      montant_ttc: "C",
-      categorie: "D",
-      motif: "E",
-    },
-  };
-
+  });
+  
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues,
   });
+  
+  // Fetch existing settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        if (!isAuthenticated) return;
+        
+        const { data: existingSettings } = await supabase.functions.invoke('get-settings', {
+          headers: session?.access_token 
+            ? { Authorization: `Bearer ${session.access_token}` } 
+            : undefined
+        });
+        
+        if (existingSettings && existingSettings.spreadsheetId) {
+          setDefaultValues(existingSettings);
+          form.reset(existingSettings);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    
+    fetchSettings();
+  }, [isAuthenticated, session]);
 
   const onSubmit = async (data: SettingsFormValues) => {
     setIsSaving(true);
     
     try {
-      // Ici nous simulons la sauvegarde des paramètres
-      // Dans une implémentation réelle, vous enverriez ces données à votre backend
-      console.log("Saving settings:", data);
+      if (!isAuthenticated || !session?.access_token) {
+        throw new Error("You must be logged in to save settings");
+      }
       
-      // Simuler un délai de réseau
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save settings using edge function
+      const { error } = await supabase.functions.invoke('save-settings', {
+        body: data,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
       
-      // Afficher un toast de succès
+      if (error) throw error;
+      
+      // Also need to update the environment variables for the edge functions
+      // We need admin privileges for this, so we'll use a separate function
+      const { error: envError } = await supabase.functions.invoke('update-env-vars', {
+        body: {
+          SPREADSHEET_ID: data.spreadsheetId,
+          SHEET_NAME: data.sheetName
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (envError) {
+        console.error("Error updating environment variables:", envError);
+        // This is not critical, so we'll just log it and continue
+      }
+      
       toast({
         title: "Paramètres sauvegardés",
         description: "Vos paramètres Google Sheets ont été mis à jour avec succès.",
       });
-      
-      // Rediriger vers la page d'accueil ou rester sur la page
     } catch (error) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la sauvegarde des paramètres.",
+        description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -121,7 +151,7 @@ const Settings = () => {
               <CardTitle>Configuration Google Sheets</CardTitle>
             </div>
             <CardDescription>
-              Configurez la connexion et le mappage des colonnes pour votre feuille Google Sheets
+              Configurez la connexion et le nom de la feuille pour votre Google Sheets
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -130,15 +160,15 @@ const Settings = () => {
                 <div className="grid gap-6 md:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name="spreadsheetUrl"
+                    name="spreadsheetId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>URL du Google Sheets</FormLabel>
+                        <FormLabel>ID du Google Sheets</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://docs.google.com/spreadsheets/d/..." {...field} />
+                          <Input placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" {...field} />
                         </FormControl>
                         <FormDescription>
-                          L'URL complet de votre feuille Google Sheets
+                          L'ID de votre feuille Google Sheets se trouve dans l'URL (entre "d/" et "/edit")
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -166,94 +196,14 @@ const Settings = () => {
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
                     <Table2 className="h-5 w-5 text-primary" />
-                    Mappage des colonnes
+                    Configuration des colonnes
                   </h3>
                   
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="columnMappings.date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date</FormLabel>
-                          <FormControl>
-                            <Input placeholder="A" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Colonne pour la date du ticket
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="columnMappings.commercant"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Commerçant</FormLabel>
-                          <FormControl>
-                            <Input placeholder="B" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Colonne pour le nom du commerçant
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="columnMappings.montant_ttc"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Montant TTC</FormLabel>
-                          <FormControl>
-                            <Input placeholder="C" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Colonne pour le montant TTC
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="columnMappings.categorie"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Catégorie</FormLabel>
-                          <FormControl>
-                            <Input placeholder="D" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Colonne pour la catégorie
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="columnMappings.motif"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Motif (optionnel)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="E" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Colonne pour le motif de la dépense
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="p-4 bg-orange-50 border border-orange-200 rounded-md mb-6">
+                    <p className="text-orange-800 text-sm">
+                      L'application écrit actuellement dans des colonnes fixes (A à E) dans l'ordre suivant : Date, Commerçant, Montant TTC, Catégorie, Motif. 
+                      Assurez-vous que votre feuille de calcul suit ce format.
+                    </p>
                   </div>
                 </div>
                 

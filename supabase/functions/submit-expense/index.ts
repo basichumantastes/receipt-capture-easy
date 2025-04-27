@@ -37,42 +37,63 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
     
-    // Get the Google Sheets URL and other settings from environment variables
-    // In a real implementation, these would come from your Supabase secrets or user settings
-    const SCRIPT_URL = Deno.env.get("SCRIPT_URL");
+    // Get the Google Sheets ID from environment variables
+    const SPREADSHEET_ID = Deno.env.get("SPREADSHEET_ID");
     
-    if (!SCRIPT_URL) {
-      throw new Error('Google Apps Script URL is not configured');
+    if (!SPREADSHEET_ID) {
+      throw new Error('Google Spreadsheet ID is not configured');
     }
     
-    // Forward the expense data to Google Apps Script
-    const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authorization
-      },
-      body: JSON.stringify({
-        date: expenseData.date,
-        commercant: expenseData.commercant,
-        montant_ttc: expenseData.montant_ttc,
-        categorie: expenseData.categorie,
-        motif: expenseData.motif || ""
-      })
-    });
+    // We'll use the user's Google token sent in the Authorization header
+    // The token should be the one obtained from Google OAuth during login
+    const token = authorization.replace("Bearer ", "");
+    
+    // Prepare the values to be added to the spreadsheet
+    const values = [
+      [
+        expenseData.date,
+        expenseData.commercant,
+        expenseData.montant_ttc.toString(),
+        expenseData.categorie,
+        expenseData.motif || ""
+      ]
+    ];
+    
+    // Use Google Sheets API v4 to append values to the spreadsheet
+    const sheetName = Deno.env.get("SHEET_NAME") || "Dépenses"; // Default to "Dépenses" if not specified
+    const range = `${sheetName}!A:E`;
+    
+    const response = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, 
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          values: values
+        })
+      }
+    );
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Google Apps Script error:", errorText);
-      throw new Error(`Google Apps Script error: ${response.statusText}`);
+      console.error("Google Sheets API error:", errorText);
+      throw new Error(`Google Sheets API error: ${response.statusText}`);
     }
     
     const result = await response.json();
     
-    // Return the result
-    return new Response(JSON.stringify(result), {
+    // Return success response
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Expense successfully added to Google Sheets",
+      details: result
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+    
   } catch (error) {
     console.error("Error in submit-expense function:", error);
     
