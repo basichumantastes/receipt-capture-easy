@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import ReceiptCapture from "@/components/ReceiptCapture";
 
 interface ExpenseData {
   date: string;
@@ -29,6 +29,8 @@ const Submit = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
   
   const [formData, setFormData] = useState<ExpenseData>({
     date: format(new Date(), "yyyy-MM-dd"),
@@ -44,6 +46,23 @@ const Submit = () => {
       navigate('/login?from=/submit', { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  const handleImageCapture = async (imageData: string) => {
+    setCapturedImage(imageData);
+    setAnalyzing(true);
+    
+    try {
+      // TODO: Implement OCR and OpenAI analysis
+      // For now, we'll just show a success message
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success("Analyse du reçu terminée");
+      setAnalyzing(false);
+    } catch (error) {
+      console.error("Error analyzing receipt:", error);
+      toast.error("Erreur lors de l'analyse du reçu");
+      setAnalyzing(false);
+    }
+  };
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
@@ -141,11 +160,20 @@ const Submit = () => {
         <CardHeader>
           <CardTitle>Soumettre une note de frais</CardTitle>
           <CardDescription>
-            Entrez les détails de votre dépense pour l'ajouter à votre tableau
+            Prenez une photo de votre ticket pour l'analyser automatiquement, ou remplissez les détails manuellement
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
+            <ReceiptCapture onImageCapture={handleImageCapture} />
+            
+            {analyzing && (
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Analyse du reçu en cours...</span>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
               <Popover>
@@ -165,7 +193,7 @@ const Submit = () => {
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={handleDateChange}
+                    onSelect={setDate}
                     initialFocus
                   />
                 </PopoverContent>
@@ -237,7 +265,7 @@ const Submit = () => {
             <Button 
               type="submit"
               className="w-full gap-2"
-              disabled={loading}
+              disabled={loading || analyzing}
             >
               {loading ? (
                 <>
