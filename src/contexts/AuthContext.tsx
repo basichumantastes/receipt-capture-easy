@@ -8,12 +8,14 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  isAuthenticated: boolean; // Add this property
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
+  isAuthenticated: false, // Add default value
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -43,8 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  // Derive isAuthenticated from user
+  const isAuthenticated = !!user;
+
   return (
-    <AuthContext.Provider value={{ session, user, loading }}>
+    <AuthContext.Provider value={{ session, user, loading, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
