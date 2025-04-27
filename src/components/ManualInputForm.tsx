@@ -2,17 +2,14 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Loader2, Camera, SendHorizonal } from "lucide-react";
+import { Loader2, Camera, SendHorizonal } from "lucide-react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { FormDatePicker } from "./manual-input/FormDatePicker";
+import { FormMerchant } from "./manual-input/FormMerchant";
+import { FormAmount } from "./manual-input/FormAmount";
+import { FormCategory } from "./manual-input/FormCategory";
+import { FormReason } from "./manual-input/FormReason";
 
 interface ExpenseData {
   date: string;
@@ -47,7 +44,9 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -119,92 +118,11 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
               </div>
             )}
             
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP", { locale: fr }) : "Sélectionnez une date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="commercant">Commerçant</Label>
-              <Input
-                id="commercant"
-                name="commercant"
-                value={formData.commercant}
-                onChange={handleChange}
-                placeholder="Nom du commerçant"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="montant_ttc">Montant TTC</Label>
-              <div className="relative">
-                <Input
-                  id="montant_ttc"
-                  name="montant_ttc"
-                  type="number"
-                  step="0.01"
-                  value={formData.montant_ttc || ""}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  className="pl-6"
-                  required
-                />
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">€</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="categorie">Catégorie</Label>
-              <Select
-                value={formData.categorie}
-                onValueChange={handleCategoryChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Restaurant">Restaurant</SelectItem>
-                  <SelectItem value="Transport">Transport</SelectItem>
-                  <SelectItem value="Hébergement">Hébergement</SelectItem>
-                  <SelectItem value="Fournitures">Fournitures</SelectItem>
-                  <SelectItem value="Autre">Autre</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="motif">Motif</Label>
-              <Textarea
-                id="motif"
-                name="motif"
-                value={formData.motif}
-                onChange={handleChange}
-                placeholder="Détails de la dépense"
-                rows={3}
-              />
-            </div>
+            <FormDatePicker date={date} onDateChange={handleDateChange} />
+            <FormMerchant value={formData.commercant} onChange={handleChange} />
+            <FormAmount value={formData.montant_ttc} onChange={handleChange} />
+            <FormCategory value={formData.categorie} onValueChange={handleCategoryChange} />
+            <FormReason value={formData.motif} onChange={handleChange} />
           </CardContent>
           <CardFooter>
             <Button 
