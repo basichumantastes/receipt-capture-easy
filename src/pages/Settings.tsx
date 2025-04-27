@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { GoogleSheetsConfig, SettingsFormValues } from "@/components/settings/GoogleSheetsConfig";
+import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSheetsConfig";
 import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -17,7 +16,7 @@ const SettingsPage = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Default values that will be updated if we have stored settings
-  const [defaultValues, setDefaultValues] = useState<Partial<SettingsFormValues>>({
+  const [defaultValues, setDefaultValues] = useState<Partial<Settings>>({
     spreadsheetId: "",
     sheetName: "Dépenses",
   });
@@ -51,7 +50,7 @@ const SettingsPage = () => {
     getSettings();
   }, [isAuthenticated, session]);
 
-  const onSubmit = async (data: SettingsFormValues) => {
+  const onSubmit = async (data: Settings) => {
     setIsSaving(true);
     setError(null);
     
