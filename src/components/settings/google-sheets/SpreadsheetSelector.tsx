@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Command,
   CommandEmpty,
@@ -36,11 +36,10 @@ export const SpreadsheetSelector = ({
   selectedId
 }: SpreadsheetSelectorProps) => {
   const [open, setOpen] = React.useState(false);
-  const { session } = useAuth();
+  const { session, hasRequiredScopes, login } = useAuth();
   
-  // Vérifie si le token Google contient les scopes nécessaires
+  // Vérifier si le token Google est disponible
   const googleToken = session?.provider_token;
-  const hasRequiredScopes = googleToken ? true : false; // Simplifié pour l'interface
 
   return (
     <div className="flex gap-2 items-center">
@@ -48,10 +47,20 @@ export const SpreadsheetSelector = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <div className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-amber-500 mr-1" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={login} 
+                  className="text-xs px-2 py-0 h-6"
+                >
+                  Reconnexion requise
+                </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Autorisations Google insuffisantes. Veuillez vous reconnecter.</p>
+              <p>Autorisations Google insuffisantes. Veuillez vous reconnecter avec le bouton ci-contre.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -64,7 +73,7 @@ export const SpreadsheetSelector = ({
             type="button"
             aria-expanded={open}
             className="w-10 p-0"
-            disabled={isLoading}
+            disabled={isLoading || !hasRequiredScopes}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
@@ -106,7 +115,7 @@ export const SpreadsheetSelector = ({
         type="button"
         className="w-10 p-0"
         onClick={onRefresh}
-        disabled={isLoading}
+        disabled={isLoading || !hasRequiredScopes}
         title="Rafraîchir la liste"
       >
         <RefreshCcw className="h-4 w-4" />

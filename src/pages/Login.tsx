@@ -2,9 +2,10 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const { isAuthenticated, login, loading } = useAuth();
@@ -38,7 +39,16 @@ const Login = () => {
             Connectez-vous avec votre compte Google pour accéder à l'application
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center">
+        
+        <CardContent className="flex flex-col items-center gap-4">
+          <Alert className="bg-blue-50 border-blue-200 mb-4">
+            <Info className="h-4 w-4 text-blue-800" />
+            <AlertDescription className="text-blue-800">
+              Cette application demande l'accès à Google Sheets et à Google Drive (en lecture seule) 
+              pour fonctionner correctement. Veuillez autoriser ces accès lors de la connexion.
+            </AlertDescription>
+          </Alert>
+          
           <Button 
             onClick={login}
             className="w-full flex items-center gap-2"
@@ -54,6 +64,13 @@ const Login = () => {
             Se connecter avec Google
           </Button>
         </CardContent>
+        
+        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col">
+          <p>
+            Si vous rencontrez des problèmes d'autorisation, veuillez essayer de 
+            révoquer l'accès à cette application dans votre compte Google et vous reconnecter.
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
