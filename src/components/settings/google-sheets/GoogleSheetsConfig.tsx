@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, RefreshIcon } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCwIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Settings } from "@/services/settingsService";
 import { 
@@ -174,7 +174,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
           {isLoading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
-            <RefreshIcon className="h-4 w-4 mr-2" />
+            <RefreshCwIcon className="h-4 w-4 mr-2" />
           )}
           Actualiser
         </Button>
