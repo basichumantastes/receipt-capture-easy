@@ -1,66 +1,86 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 const ReceiptCapture = ({ onImageCapture }: { onImageCapture: (imageData: string) => void }) => {
-  const [isCapturing, setIsCapturing] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
 
-  const startCapture = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-
-      // Wait for video to be ready
-      await new Promise((resolve) => {
-        video.onloadedmetadata = () => {
-          resolve(true);
-        };
-      });
-
-      // Create canvas and capture image
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      
-      if (!context) {
-        throw new Error("Could not get canvas context");
+  useEffect(() => {
+    // Start camera immediately when component mounts
+    startCamera();
+    
+    // Cleanup when component unmounts
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
+    };
+  }, []);
 
-      context.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/jpeg');
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" } // Use back camera
+      });
+      setStream(mediaStream);
       
-      // Stop all video tracks
-      stream.getTracks().forEach(track => track.stop());
-      
-      onImageCapture(imageData);
-      toast.success("Image capturée avec succès");
+      if (videoRef) {
+        videoRef.srcObject = mediaStream;
+      }
     } catch (error) {
       console.error("Error accessing camera:", error);
       toast.error("Erreur lors de l'accès à la caméra");
     }
   };
 
+  const captureImage = () => {
+    if (!videoRef) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.videoWidth;
+    canvas.height = videoRef.videoHeight;
+    const context = canvas.getContext('2d');
+    
+    if (!context) {
+      toast.error("Erreur lors de la capture");
+      return;
+    }
+
+    context.drawImage(videoRef, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg');
+    
+    // Stop the camera stream
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
+    onImageCapture(imageData);
+    toast.success("Image capturée avec succès");
+  };
+
   return (
-    <Card className="w-full mb-6">
-      <CardContent className="pt-6">
+    <div className="relative w-full h-[calc(100vh-8rem)]">
+      <video
+        ref={ref => setVideoRef(ref)}
+        autoPlay
+        playsInline
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center">
         <Button 
-          onClick={startCapture}
-          className="w-full h-32 border-2 border-dashed hover:border-solid transition-all"
+          onClick={captureImage}
+          size="lg"
+          className="rounded-full w-16 h-16 p-0"
           variant="outline"
         >
-          <div className="flex flex-col items-center gap-2">
-            <Camera className="h-8 w-8" />
-            <span>Prendre une photo du reçu</span>
-          </div>
+          <Camera className="h-8 w-8" />
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
