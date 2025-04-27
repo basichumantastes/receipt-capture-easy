@@ -61,18 +61,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async () => {
     try {
-      // Déterminer l'URL de redirection de manière dynamique
-      // En utilisant l'origine de la fenêtre en cours ou l'URL de production en repli
-      const redirectTo = typeof window !== 'undefined' 
-        ? `${window.location.origin}/login`
-        : 'https://qayxeeuojrmhwrevyapn.lovable.dev/login';
+      // Utiliser simplement l'URL actuelle pour la redirection
+      const redirectUrl = `${window.location.origin}/login`;
       
-      console.log("Redirecting to:", redirectTo);
+      console.log("Redirecting to:", redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo,
+          redirectTo: redirectUrl,
         },
       });
       if (error) throw error;
