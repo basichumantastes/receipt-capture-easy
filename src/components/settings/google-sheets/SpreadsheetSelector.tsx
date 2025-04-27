@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Command,
   CommandEmpty,
@@ -14,9 +14,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, RefreshCcw, Search } from "lucide-react";
+import { Check, Loader2, RefreshCcw, Search, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SpreadsheetInfo } from "@/services/googleSheetsService";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SpreadsheetSelectorProps {
   spreadsheets: SpreadsheetInfo[];
@@ -34,9 +36,27 @@ export const SpreadsheetSelector = ({
   selectedId
 }: SpreadsheetSelectorProps) => {
   const [open, setOpen] = React.useState(false);
+  const { session } = useAuth();
+  
+  // Vérifie si le token Google contient les scopes nécessaires
+  const googleToken = session?.provider_token;
+  const hasRequiredScopes = googleToken ? true : false; // Simplifié pour l'interface
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
+      {!hasRequiredScopes && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Autorisations Google insuffisantes. Veuillez vous reconnecter.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button 

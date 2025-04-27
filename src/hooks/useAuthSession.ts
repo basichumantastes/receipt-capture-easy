@@ -41,6 +41,7 @@ export const useAuthSession = () => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       console.log("Initial session check:", currentSession?.user?.email || "No session");
+      console.log("Provider token available:", !!currentSession?.provider_token);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
@@ -54,9 +55,14 @@ export const useAuthSession = () => {
 
   const login = async () => {
     try {
+      // Forcer la déconnexion avant de se reconnecter pour s'assurer que tous les scopes sont demandés
+      await supabase.auth.signOut();
+      clearSettingsCache();
+      
       const redirectUrl = `${window.location.origin}/login`;
       
       console.log("Redirecting to:", redirectUrl);
+      console.log("Requesting scopes: spreadsheets and drive.readonly");
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -64,6 +70,11 @@ export const useAuthSession = () => {
           redirectTo: redirectUrl,
           // Demander explicitement les deux autorisations nécessaires
           scopes: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly',
+          // Forcer la demande de consentement à chaque fois pour s'assurer que les scopes sont bien demandés
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       });
       if (error) throw error;
