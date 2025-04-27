@@ -10,6 +10,8 @@ import { FormMerchant } from "./manual-input/FormMerchant";
 import { FormAmount } from "./manual-input/FormAmount";
 import { FormCategory } from "./manual-input/FormCategory";
 import { FormReason } from "./manual-input/FormReason";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ExpenseData {
   date: string;
@@ -24,6 +26,7 @@ interface ManualInputFormProps {
 }
 
 const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState<ExpenseData>({
@@ -63,11 +66,35 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.commercant || formData.montant_ttc <= 0) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Prepare the data to be submitted
+      const expenseData = {
+        ...formData,
+        user_id: user?.id,
+        created_at: new Date().toISOString()
+      };
+      
+      console.log("Submitting expense data:", expenseData);
+      
+      // Call the submission function from Supabase Edge Functions
+      const { data, error } = await supabase.functions.invoke('submit-expense', {
+        body: expenseData
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      console.log("Submission response:", data);
+      
       toast.success("Dépense soumise avec succès !");
       
       // Reset form
