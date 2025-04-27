@@ -23,14 +23,16 @@ const Layout = () => {
               <>
                 {user && (
                   <div className="flex items-center gap-2">
-                    {user.imageUrl && (
+                    {user.user_metadata?.avatar_url && (
                       <img 
-                        src={user.imageUrl} 
-                        alt={user.name} 
+                        src={user.user_metadata.avatar_url} 
+                        alt={user.user_metadata.name || user.email || ""} 
                         className="h-8 w-8 rounded-full"
                       />
                     )}
-                    <span className="hidden md:inline text-sm font-medium">{user.name}</span>
+                    <span className="hidden md:inline text-sm font-medium">
+                      {user.user_metadata?.name || user.email}
+                    </span>
                   </div>
                 )}
                 <Button variant="outline" size="sm" onClick={() => logout()}>

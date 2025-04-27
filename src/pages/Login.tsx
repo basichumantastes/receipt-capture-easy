@@ -1,107 +1,49 @@
-import React, { useEffect, useRef } from "react";
+
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Bug } from "lucide-react";
+import { Bug, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Define Google Sign-In types
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, options: any) => void;
-          prompt: (notification?: any) => void;
-        };
-      };
-    };
-  }
-}
-
 const Login = () => {
-  const { isAuthenticated, login, loginAsTestUser } = useAuth();
+  const { isAuthenticated, login, loginAsTestUser, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const scriptLoaded = useRef(false);
-
+  
   // Get redirect path from query parameters
   const from = new URLSearchParams(location.search).get('from') || '/';
   
-  useEffect(() => {
-    // If already authenticated, redirect
+  // Si déjà authentifié, rediriger
+  React.useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
-      return;
     }
-    
-    // Handle credential response from Google
-    const handleCredentialResponse = (response: any) => {
-      if (response.credential) {
-        login(response.credential);
-        navigate(from, { replace: true });
-      }
-    };
+  }, [isAuthenticated, navigate, from]);
 
-    // Load Google Identity Services script
-    if (!window.google && !scriptLoaded.current) {
-      scriptLoaded.current = true;
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initializeGoogleSignIn(handleCredentialResponse);
-      script.onerror = () => toast.error("Impossible de charger Google Sign-In");
-      document.body.appendChild(script);
-    } else if (window.google) {
-      initializeGoogleSignIn(handleCredentialResponse);
+  const handleGoogleLogin = async () => {
+    try {
+      await login();
+      // La redirection sera gérée par Supabase OAuth
+    } catch (error) {
+      console.error("Erreur lors de la connexion:", error);
+      toast.error("Impossible de se connecter avec Google");
     }
-
-    function initializeGoogleSignIn(callback: (response: any) => void) {
-      try {
-        if (!window.google) {
-          console.error("Google API not loaded");
-          return;
-        }
-
-        window.google.accounts.id.initialize({
-          client_id: "GOOGLE_CLIENT_ID", // Will be replaced with environment variable
-          callback: callback,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        if (buttonRef.current) {
-          window.google.accounts.id.renderButton(buttonRef.current, {
-            theme: "outline",
-            size: "large",
-            shape: "rectangular",
-            text: "signin_with",
-            logo_alignment: "center",
-            width: 300
-          });
-        }
-
-        // Optionally display the One Tap prompt
-        // window.google.accounts.id.prompt();
-      } catch (error) {
-        console.error("Error initializing Google Sign-In:", error);
-        toast.error("Erreur lors de l'initialisation de Google Sign-In");
-      }
-    }
-
-    return () => {
-      // Cleanup if needed
-    };
-  }, [isAuthenticated, login, navigate, from]);
+  };
 
   const handleTestLogin = () => {
     loginAsTestUser();
     navigate(from, { replace: true });
   };
+
+  if (loading) {
+    return (
+      <div className="container max-w-md py-16 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-expense-blue" />
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-md py-16">
@@ -113,14 +55,20 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center">
-          {!window.google ? (
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="h-6 w-6 animate-spin text-expense-blue" />
-              <span className="ml-2">Chargement...</span>
-            </div>
-          ) : (
-            <div ref={buttonRef} className="google-signin-button"></div>
-          )}
+          <Button 
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center gap-2 mb-4"
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+                <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+                <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z" />
+                <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z" />
+              </g>
+            </svg>
+            Se connecter avec Google
+          </Button>
         </CardContent>
         <CardFooter className="flex flex-col">
           <div className="w-full border-t my-4"></div>
