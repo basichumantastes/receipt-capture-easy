@@ -10,16 +10,8 @@ import { FormMerchant } from "./manual-input/FormMerchant";
 import { FormAmount } from "./manual-input/FormAmount";
 import { FormCategory } from "./manual-input/FormCategory";
 import { FormReason } from "./manual-input/FormReason";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
-interface ExpenseData {
-  date: string;
-  commercant: string;
-  montant_ttc: number;
-  categorie: string;
-  motif: string;
-}
+import { ExpenseData, submitExpense } from "@/services/expenseService";
 
 interface ManualInputFormProps {
   capturedImage: string | null;
@@ -72,36 +64,14 @@ const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
       return;
     }
     
-    if (!session?.access_token) {
-      toast.error("Vous devez être connecté avec votre compte Google pour soumettre une dépense");
-      return;
-    }
-    
     setLoading(true);
     
     try {
-      // Prepare the data to be submitted
-      const expenseData = {
-        ...formData,
-        user_id: user?.id,
-        created_at: new Date().toISOString()
-      };
+      const result = await submitExpense(formData, session);
       
-      console.log("Submitting expense data:", expenseData);
-      
-      // Call the submission function from Supabase Edge Functions
-      const { data, error } = await supabase.functions.invoke('submit-expense', {
-        body: expenseData,
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-      
-      if (error) {
-        throw new Error(error.message);
+      if (!result.success) {
+        throw result.error || new Error("Failed to submit expense");
       }
-      
-      console.log("Submission response:", data);
       
       toast.success("Dépense soumise avec succès !");
       

@@ -32,4 +32,4 @@ enabled = true
 [edge_functions.submit-expense]
 [edge_functions.save-settings]
 [edge_functions.get-settings]
-
+[edge_functions.update-env-vars]
