@@ -2,13 +2,12 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bug, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Login = () => {
-  const { isAuthenticated, login, loginAsTestUser, loading } = useAuth();
+  const { isAuthenticated, login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -21,21 +20,6 @@ const Login = () => {
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
-
-  const handleGoogleLogin = async () => {
-    try {
-      await login();
-      // La redirection sera gérée par Supabase OAuth
-    } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
-      toast.error("Impossible de se connecter avec Google");
-    }
-  };
-
-  const handleTestLogin = () => {
-    loginAsTestUser();
-    navigate(from, { replace: true });
-  };
 
   if (loading) {
     return (
@@ -56,8 +40,8 @@ const Login = () => {
         </CardHeader>
         <CardContent className="flex flex-col items-center">
           <Button 
-            onClick={handleGoogleLogin}
-            className="w-full flex items-center gap-2 mb-4"
+            onClick={login}
+            className="w-full flex items-center gap-2"
           >
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
               <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
@@ -70,20 +54,6 @@ const Login = () => {
             Se connecter avec Google
           </Button>
         </CardContent>
-        <CardFooter className="flex flex-col">
-          <div className="w-full border-t my-4"></div>
-          <Button 
-            variant="outline" 
-            onClick={handleTestLogin}
-            className="w-full flex items-center gap-2"
-          >
-            <Bug className="h-4 w-4" />
-            <span>Connexion en mode test</span>
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Ce mode permet de tester l'application sans configurer OAuth
-          </p>
-        </CardFooter>
       </Card>
     </div>
   );

@@ -11,7 +11,6 @@ interface AuthContextType {
   loading: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  loginAsTestUser: () => void; // Pour conserver la fonctionnalité de test
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,7 +20,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   login: async () => {},
   logout: async () => {},
-  loginAsTestUser: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -61,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async () => {
     try {
-      // Utiliser simplement l'URL actuelle pour la redirection
       const redirectUrl = `${window.location.origin}/login`;
       
       console.log("Redirecting to:", redirectUrl);
@@ -89,26 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fonction de connexion de test maintenue pour compatibilité
-  const loginAsTestUser = () => {
-    // Cast le test user en unknown puis en User pour satisfaire TypeScript
-    const testUser = {
-      id: "test-user-id",
-      email: "test@example.com",
-      user_metadata: {
-        name: "Utilisateur Test",
-        avatar_url: "https://ui-avatars.com/api/?name=Test+User&background=0D8ABC&color=fff",
-      },
-      app_metadata: {},
-      aud: "authenticated",
-      created_at: new Date().toISOString()
-    } as unknown as User;
-    
-    setUser(testUser);
-    setSession({ user: testUser } as Session);
-    toast.success(`Connecté en mode test en tant que Utilisateur Test`);
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -118,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         loading,
-        loginAsTestUser,
       }}
     >
       {children}
