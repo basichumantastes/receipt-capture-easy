@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table2, FileSpreadsheet, Loader2, Search } from "lucide-react";
+import { Table2, FileSpreadsheet, Loader2, Search, RefreshCcw, AlertCircle } from "lucide-react";
 import { 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { SpreadsheetInfo, listSpreadsheets } from "@/services/googleSheetsService";
@@ -39,6 +40,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const settingsFormSchema = z.object({
   spreadsheetId: z.string().min(1, "Veuillez saisir l'ID du Google Sheets"),
@@ -57,6 +59,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
   const { session } = useAuth();
   const [spreadsheets, setSpreadsheets] = useState<SpreadsheetInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   
   const form = useForm<SettingsFormValues>({
@@ -72,24 +75,36 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     }
   }, [defaultValues, form]);
   
-  // Chargement de la liste des spreadsheets
-  useEffect(() => {
-    const loadSpreadsheets = async () => {
-      if (!session) return;
-      
-      setIsLoading(true);
-      try {
-        const sheetsList = await listSpreadsheets(session);
-        if (sheetsList) {
-          setSpreadsheets(sheetsList);
-        }
-      } catch (error) {
-        console.error("Error loading spreadsheets:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Fonction pour charger la liste des spreadsheets
+  const loadSpreadsheets = async () => {
+    if (!session) {
+      setLoadError("Vous devez être connecté pour charger vos Google Sheets");
+      return;
+    }
     
+    setIsLoading(true);
+    setLoadError(null);
+    
+    try {
+      const sheetsList = await listSpreadsheets(session);
+      if (sheetsList) {
+        setSpreadsheets(sheetsList);
+        
+        // Si aucun spreadsheet n'est trouvé, afficher un message
+        if (sheetsList.length === 0) {
+          setLoadError("Aucun Google Sheets trouvé dans votre compte. Assurez-vous d'avoir créé au moins un fichier Google Sheets accessible.");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error loading spreadsheets:", error);
+      setLoadError(`Erreur lors du chargement des Google Sheets: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Chargement initial de la liste des spreadsheets
+  useEffect(() => {
     loadSpreadsheets();
   }, [session]);
 
@@ -110,6 +125,14 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {loadError && (
+          <Alert variant="warning" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Attention</AlertTitle>
+            <AlertDescription>{loadError}</AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
@@ -165,6 +188,17 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
                             </Command>
                           </PopoverContent>
                         </Popover>
+                        
+                        <Button 
+                          variant="outline" 
+                          type="button"
+                          className="w-10 p-0"
+                          onClick={() => loadSpreadsheets()}
+                          disabled={isLoading}
+                          title="Rafraîchir la liste"
+                        >
+                          <RefreshCcw className="h-4 w-4" />
+                        </Button>
                       </div>
                       <FormDescription>
                         L'ID de votre feuille Google Sheets se trouve dans l'URL (entre "d/" et "/edit")
@@ -220,6 +254,27 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
           </form>
         </Form>
       </CardContent>
+      <CardFooter className="flex justify-between border-t pt-6 text-sm text-muted-foreground">
+        <div>
+          {spreadsheets.length > 0 ? (
+            <p>{spreadsheets.length} Google Sheets disponibles</p>
+          ) : isLoading ? (
+            <p>Chargement des Google Sheets...</p>
+          ) : (
+            <p>Aucun Google Sheets trouvé</p>
+          )}
+        </div>
+        <p>
+          <a 
+            href="https://docs.google.com/spreadsheets/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Créer un nouveau Google Sheets
+          </a>
+        </p>
+      </CardFooter>
     </Card>
   );
 };

@@ -62,8 +62,8 @@ export const useAuthSession = () => {
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          // Request additional scopes for Google Sheets access
-          scopes: 'https://www.googleapis.com/auth/spreadsheets',
+          // Request additional scopes for Google Sheets and Google Drive access
+          scopes: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly',
         },
       });
       if (error) throw error;
