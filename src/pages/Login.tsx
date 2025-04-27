@@ -49,6 +49,14 @@ const Login = () => {
             </AlertDescription>
           </Alert>
           
+          <Alert variant="default" className="bg-amber-50 border-amber-200 mb-4">
+            <Info className="h-4 w-4 text-amber-800" />
+            <AlertDescription className="text-amber-800">
+              Vous serez redirigé vers Supabase (qayxeeuojrmhwrevyapn.supabase.co) pour l'authentification, 
+              puis vers Google pour autoriser l'accès. C'est normal et sécurisé.
+            </AlertDescription>
+          </Alert>
+          
           <Button 
             onClick={login}
             className="w-full flex items-center gap-2"
@@ -65,10 +73,20 @@ const Login = () => {
           </Button>
         </CardContent>
         
-        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col">
+        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col gap-2">
           <p>
             Si vous rencontrez des problèmes d'autorisation, veuillez essayer de 
             révoquer l'accès à cette application dans votre compte Google et vous reconnecter.
+          </p>
+          <p>
+            <a 
+              href="https://myaccount.google.com/permissions" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-primary hover:underline"
+            >
+              Révoquer les accès dans Google
+            </a>
           </p>
         </CardFooter>
       </Card>

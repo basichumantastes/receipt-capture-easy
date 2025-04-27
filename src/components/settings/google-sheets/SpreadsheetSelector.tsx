@@ -38,12 +38,13 @@ export const SpreadsheetSelector = ({
   const [open, setOpen] = React.useState(false);
   const { session, hasRequiredScopes, login } = useAuth();
   
-  // Vérifier si le token Google est disponible
+  // Check if Google token is available
   const googleToken = session?.provider_token;
+  const hasGoogleToken = !!googleToken;
 
   return (
     <div className="flex gap-2 items-center">
-      {!hasRequiredScopes && (
+      {(!hasGoogleToken || !hasRequiredScopes) && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -73,7 +74,7 @@ export const SpreadsheetSelector = ({
             type="button"
             aria-expanded={open}
             className="w-10 p-0"
-            disabled={isLoading || !hasRequiredScopes}
+            disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
@@ -115,7 +116,7 @@ export const SpreadsheetSelector = ({
         type="button"
         className="w-10 p-0"
         onClick={onRefresh}
-        disabled={isLoading || !hasRequiredScopes}
+        disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
         title="Rafraîchir la liste"
       >
         <RefreshCcw className="h-4 w-4" />
