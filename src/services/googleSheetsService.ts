@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -49,6 +48,54 @@ export async function checkGoogleApiStatus(session: Session | null): Promise<Goo
   } catch (error) {
     console.error("Failed to check API status:", error);
     return GoogleApiStatus.ERROR;
+  }
+}
+
+export interface WorksheetInfo {
+  title: string;
+  index: number;
+}
+
+/**
+ * Fetch list of worksheets/tabs for a specific spreadsheet
+ */
+export async function listWorksheets(session: Session | null, spreadsheetId: string): Promise<WorksheetInfo[] | null> {
+  try {
+    if (!session?.access_token || !spreadsheetId) {
+      console.log("No active session or spreadsheet ID found when fetching worksheets list");
+      return null;
+    }
+    
+    if (!session?.provider_token) {
+      console.log("No Google token available. User may need to reconnect.");
+      toast.error("Autorisations Google insuffisantes. Veuillez vous reconnecter.");
+      return [];
+    }
+    
+    const response = await supabase.functions.invoke('list-worksheets', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      body: { 
+        googleToken: session.provider_token,
+        spreadsheetId 
+      }
+    });
+    
+    const { data, error } = response;
+    
+    if (error) {
+      console.error("Error from list-worksheets function:", error);
+      throw error;
+    }
+    
+    if (!data?.sheets) {
+      return [];
+    }
+    
+    return data.sheets;
+  } catch (error: any) {
+    console.error("Error fetching worksheets list:", error);
+    toast.error(`Erreur: ${error.message || "Échec de la récupération des onglets"}`);
+    return [];
   }
 }
 
