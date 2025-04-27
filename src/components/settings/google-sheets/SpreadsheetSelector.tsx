@@ -14,11 +14,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, RefreshCcw, Search, AlertCircle } from "lucide-react";
+import { Check, Loader2, RefreshCcw, Search, AlertCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SpreadsheetInfo } from "@/services/googleSheetsService";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface SpreadsheetSelectorProps {
   spreadsheets: SpreadsheetInfo[];
@@ -66,6 +67,77 @@ export const SpreadsheetSelector = ({
           </Tooltip>
         </TooltipProvider>
       )}
+      
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-xs px-2 py-0 h-6 flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Google Cloud
+          </Button>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Configuration Google Cloud</SheetTitle>
+            <SheetDescription>
+              Votre application n'est pas encore en production sur Google Cloud. 
+              Suivez ces étapes pour configurer l'accès à l'API Google Drive:
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-4">
+            <div className="space-y-2">
+              <h3 className="font-medium">1. Activer l'API Google Drive</h3>
+              <p className="text-sm text-muted-foreground">
+                Vous devez activer l'API Google Drive dans votre console Google Cloud
+                pour pouvoir accéder à vos spreadsheets.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.open("https://console.developers.google.com/apis/api/drive.googleapis.com/overview", "_blank")}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" /> Aller à la console Google Cloud
+              </Button>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="font-medium">2. Configurer les écrans de consentement et d'autorisation</h3>
+              <p className="text-sm text-muted-foreground">
+                Assurez-vous que votre application est correctement configurée dans la 
+                console Google Cloud, notamment les écrans de consentement et les domaines autorisés.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.open("https://console.cloud.google.com/apis/credentials", "_blank")}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" /> Gérer les identifiants OAuth
+              </Button>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="font-medium">3. Se reconnecter à l'application</h3>
+              <p className="text-sm text-muted-foreground">
+                Une fois les API activées, reconnectez-vous à l'application pour 
+                obtenir un nouveau jeton d'accès avec les bonnes permissions.
+              </p>
+              <Button
+                onClick={login}
+                className="mt-2"
+                size="sm"
+              >
+                Se reconnecter
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
       
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>

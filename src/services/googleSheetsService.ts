@@ -48,6 +48,23 @@ export async function listSpreadsheets(session: Session | null): Promise<Spreads
       throw error;
     }
     
+    // Check if Google Drive API needs to be activated
+    if (data?.apiActivationRequired) {
+      console.log("Google Drive API activation required");
+      toast.error(
+        "L'API Google Drive n'est pas activée",
+        {
+          description: "Vous devez activer l'API Google Drive dans votre console Google Cloud.",
+          action: {
+            label: "Activer l'API",
+            onClick: () => window.open("https://console.developers.google.com/apis/api/drive.googleapis.com/overview", "_blank")
+          },
+          duration: 10000
+        }
+      );
+      return [];
+    }
+    
     // If we have a message but no files, it's probably because no files were found
     if (data?.message && (!data.files || data.files.length === 0)) {
       console.log("Message from API:", data.message);

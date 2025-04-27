@@ -55,6 +55,19 @@ serve(async (req) => {
         console.error("Google Drive API error status:", response.status);
         console.error("Google Drive API error details:", errorText);
         
+        // Check for API not enabled error (common during development)
+        if (errorText.includes("API has not been used") || errorText.includes("disabled")) {
+          return new Response(JSON.stringify({ 
+            error: "L'API Google Drive n'est pas activée dans votre projet Google Cloud. Vous devez l'activer dans la console Google Cloud.",
+            files: [],
+            details: errorText,
+            apiActivationRequired: true
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+        
         // Specific error for authentication issues
         if (response.status === 401) {
           return new Response(JSON.stringify({ 
