@@ -76,27 +76,6 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
     // Mettre à jour le cache avec les nouvelles données
     settingsCache = data;
     
-    // Update environment variables for edge functions if needed
-    try {
-      const { error: envError } = await supabase.functions.invoke('update-env-vars', {
-        body: {
-          SPREADSHEET_ID: data.spreadsheetId,
-          SHEET_NAME: data.sheetName
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-      
-      if (envError) {
-        console.error("Error updating environment variables:", envError);
-        // This is not critical, so we'll just log it and continue
-      }
-    } catch (envUpdateError) {
-      console.error("Failed to update environment variables:", envUpdateError);
-      // Non-critical error, continue
-    }
-    
     console.log("Settings saved successfully:", result);
     return { success: true };
   } catch (error) {
