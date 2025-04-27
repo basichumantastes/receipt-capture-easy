@@ -8,14 +8,14 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  isAuthenticated: boolean; // Add this property
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
-  isAuthenticated: false, // Add default value
+  isAuthenticated: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
