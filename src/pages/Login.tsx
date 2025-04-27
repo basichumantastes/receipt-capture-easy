@@ -14,7 +14,7 @@ const Login = () => {
   // Get redirect path from query parameters
   const from = new URLSearchParams(location.search).get('from') || '/';
   
-  // Si déjà authentifié, rediriger
+  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
