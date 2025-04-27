@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Upload, Brain, Settings, Layers } from "lucide-react";
+import { Upload, Brain, Settings, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -18,7 +18,7 @@ const Home = () => {
             La gestion intelligente de vos notes de frais
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mb-8">
-            Notre IA analyse vos tickets et les synchronise automatiquement avec Google Sheets, pour une gestion simplifiée de vos dépenses
+            Capturez, analysez et synchronisez vos tickets en quelques secondes avec notre solution IA intégrée à Google Sheets
           </p>
         </div>
 
@@ -26,11 +26,23 @@ const Home = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Camera className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-2">Capture Rapide</h3>
+              <p className="text-muted-foreground">
+                Prenez une photo de votre ticket en un clic et laissez notre application faire le reste
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Brain className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">IA Intelligente</h3>
+              <h3 className="font-semibold mb-2">Analyse IA Instantanée</h3>
               <p className="text-muted-foreground">
-                Analyse automatique des tickets avec une précision optimale grâce à notre technologie d'IA avancée
+                Notre technologie d'IA extrait automatiquement toutes les informations importantes du ticket en quelques secondes
               </p>
             </CardContent>
           </Card>
@@ -40,21 +52,9 @@ const Home = () => {
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Settings className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Intégration Google Sheets</h3>
+              <h3 className="font-semibold mb-2">Synchronisation Immédiate</h3>
               <p className="text-muted-foreground">
-                Synchronisation directe avec vos tableaux Google Sheets pour un suivi simplifié de vos dépenses
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <Layers className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold mb-2">Workflow Adaptatif</h3>
-              <p className="text-muted-foreground">
-                L'application s'adapte à votre façon de travailler pour une expérience entièrement personnalisée
+                Les données sont instantanément envoyées vers votre tableau Google Sheets, sans intervention manuelle
               </p>
             </CardContent>
           </Card>
