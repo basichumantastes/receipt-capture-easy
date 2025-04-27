@@ -4,8 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Info } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Login = () => {
   const { isAuthenticated, login, loading } = useAuth();
@@ -32,30 +33,65 @@ const Login = () => {
 
   return (
     <div className="container max-w-md py-16">
-      <Card className="w-full">
+      <Card className="w-full shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle>Connexion</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl">Connexion</CardTitle>
+          <CardDescription className="text-base">
             Connectez-vous avec votre compte Google pour accéder à l'application
           </CardDescription>
         </CardHeader>
         
         <CardContent className="flex flex-col items-center gap-4">
           <Alert className="bg-blue-50 border-blue-200 mb-4">
-            <Info className="h-4 w-4 text-blue-800" />
-            <AlertDescription className="text-blue-800">
+            <AlertDescription className="text-blue-800 text-sm">
               Cette application demande l'accès à Google Sheets et à Google Drive (en lecture seule) 
-              pour fonctionner correctement. Veuillez autoriser ces accès lors de la connexion.
+              pour fonctionner correctement.
             </AlertDescription>
           </Alert>
           
-          <Alert variant="default" className="bg-amber-50 border-amber-200 mb-4">
-            <Info className="h-4 w-4 text-amber-800" />
-            <AlertDescription className="text-amber-800">
-              Vous serez redirigé vers Supabase (qayxeeuojrmhwrevyapn.supabase.co) pour l'authentification, 
-              puis vers Google pour autoriser l'accès. C'est normal et sécurisé.
-            </AlertDescription>
-          </Alert>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="mb-4 w-full text-sm">
+                Comment ça fonctionne ?
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Processus d'authentification</DialogTitle>
+                <DialogDescription>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <h3 className="font-medium mb-2">Étape 1: Authentification Supabase</h3>
+                      <p className="text-sm">
+                        Nous utilisons Supabase comme service d'authentification sécurisé. 
+                        Vous serez d'abord redirigé vers Supabase pour l'authentification.
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium mb-2">Étape 2: Autorisation Google</h3>
+                      <p className="text-sm">
+                        Après authentification, vous serez redirigé vers Google pour autoriser 
+                        l'accès à vos spreadsheets et documents Google Drive (en lecture seule).
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium mb-2">Étape 3: Configuration Google Cloud</h3>
+                      <p className="text-sm">
+                        Si c'est votre première utilisation, vous devrez peut-être activer l'API Google Drive 
+                        dans la console Google Cloud. Des instructions vous seront fournies dans l'application.
+                      </p>
+                    </div>
+                    <div className="pt-2">
+                      <p className="text-sm font-medium">
+                        Ce processus est standard pour les applications qui utilisent les API Google et respecte 
+                        les meilleures pratiques de sécurité.
+                      </p>
+                    </div>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
           
           <Button 
             onClick={login}
@@ -75,19 +111,17 @@ const Login = () => {
         
         <CardFooter className="text-center text-sm text-muted-foreground flex flex-col gap-2">
           <p>
-            Si vous rencontrez des problèmes d'autorisation, veuillez essayer de 
-            révoquer l'accès à cette application dans votre compte Google et vous reconnecter.
+            Si vous rencontrez des problèmes d'autorisation, vous pouvez révoquer les accès 
+            précédents et vous reconnecter.
           </p>
-          <p>
-            <a 
-              href="https://myaccount.google.com/permissions" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-primary hover:underline"
-            >
-              Révoquer les accès dans Google
-            </a>
-          </p>
+          <a 
+            href="https://myaccount.google.com/permissions" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-primary hover:underline"
+          >
+            Gérer les autorisations dans Google
+          </a>
         </CardFooter>
       </Card>
     </div>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Command,
   CommandEmpty,
@@ -14,12 +14,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, RefreshCcw, Search, AlertCircle, ExternalLink } from "lucide-react";
+import { Check, Loader2, RefreshCcw, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SpreadsheetInfo } from "@/services/googleSheetsService";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { GoogleApiStatus, SpreadsheetInfo } from "@/services/googleSheetsService";
 import { useAuth } from "@/contexts/AuthContext";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface SpreadsheetSelectorProps {
   spreadsheets: SpreadsheetInfo[];
@@ -27,6 +26,7 @@ interface SpreadsheetSelectorProps {
   onSelect: (id: string, name: string) => void;
   onRefresh: () => void;
   selectedId?: string;
+  apiStatus: GoogleApiStatus;
 }
 
 export const SpreadsheetSelector = ({
@@ -34,110 +34,84 @@ export const SpreadsheetSelector = ({
   isLoading,
   onSelect,
   onRefresh,
-  selectedId
+  selectedId,
+  apiStatus
 }: SpreadsheetSelectorProps) => {
-  const [open, setOpen] = React.useState(false);
-  const { session, hasRequiredScopes, login } = useAuth();
+  const [open, setOpen] = useState(false);
+  const { login } = useAuth();
   
-  // Check if Google token is available
-  const googleToken = session?.provider_token;
-  const hasGoogleToken = !!googleToken;
+  // Determine if spreadsheet selection should be disabled
+  const isSelectionDisabled = isLoading || apiStatus !== GoogleApiStatus.READY;
 
   return (
     <div className="flex gap-2 items-center">
-      {(!hasGoogleToken || !hasRequiredScopes) && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center">
-                <AlertCircle className="h-4 w-4 text-amber-500 mr-1" />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={login} 
-                  className="text-xs px-2 py-0 h-6"
+      {apiStatus === GoogleApiStatus.NEEDS_API_ACTIVATION && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button 
+              variant="destructive"
+              size="sm"
+              className="text-xs"
+            >
+              Configurer Google Cloud
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Configuration Google Cloud requise</DialogTitle>
+              <DialogDescription>
+                Pour utiliser cette application, vous devez activer l'API Google Drive dans votre projet Google Cloud.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4 space-y-6">
+              <div className="space-y-2">
+                <h3 className="font-medium">1. Activer l'API Google Drive</h3>
+                <p className="text-sm text-muted-foreground">
+                  Accédez à la console Google Cloud et activez l'API Google Drive pour votre projet.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => window.open("https://console.developers.google.com/apis/api/drive.googleapis.com/overview", "_blank")}
                 >
-                  Reconnexion requise
+                  Activer l'API Google Drive
                 </Button>
               </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Autorisations Google insuffisantes. Veuillez vous reconnecter avec le bouton ci-contre.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+              
+              <div className="space-y-2">
+                <h3 className="font-medium">2. Reconnecter l'application</h3>
+                <p className="text-sm text-muted-foreground">
+                  Une fois l'API activée, reconnectez-vous à l'application pour obtenir un nouveau jeton d'accès.
+                </p>
+                <Button
+                  onClick={login}
+                  className="mt-2"
+                  size="sm"
+                >
+                  Se reconnecter
+                </Button>
+              </div>
+              
+              <div className="border-t pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Note: L'activation de l'API peut prendre quelques minutes avant d'être effective.
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
       
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-xs px-2 py-0 h-6 flex items-center gap-1"
-          >
-            <ExternalLink className="h-3 w-3" />
-            Google Cloud
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Configuration Google Cloud</SheetTitle>
-            <SheetDescription>
-              Votre application n'est pas encore en production sur Google Cloud. 
-              Suivez ces étapes pour configurer l'accès à l'API Google Drive:
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <h3 className="font-medium">1. Activer l'API Google Drive</h3>
-              <p className="text-sm text-muted-foreground">
-                Vous devez activer l'API Google Drive dans votre console Google Cloud
-                pour pouvoir accéder à vos spreadsheets.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => window.open("https://console.developers.google.com/apis/api/drive.googleapis.com/overview", "_blank")}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" /> Aller à la console Google Cloud
-              </Button>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="font-medium">2. Configurer les écrans de consentement et d'autorisation</h3>
-              <p className="text-sm text-muted-foreground">
-                Assurez-vous que votre application est correctement configurée dans la 
-                console Google Cloud, notamment les écrans de consentement et les domaines autorisés.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => window.open("https://console.cloud.google.com/apis/credentials", "_blank")}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" /> Gérer les identifiants OAuth
-              </Button>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="font-medium">3. Se reconnecter à l'application</h3>
-              <p className="text-sm text-muted-foreground">
-                Une fois les API activées, reconnectez-vous à l'application pour 
-                obtenir un nouveau jeton d'accès avec les bonnes permissions.
-              </p>
-              <Button
-                onClick={login}
-                className="mt-2"
-                size="sm"
-              >
-                Se reconnecter
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {apiStatus === GoogleApiStatus.NEEDS_AUTH && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={login} 
+        >
+          Reconnecter
+        </Button>
+      )}
       
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -146,7 +120,7 @@ export const SpreadsheetSelector = ({
             type="button"
             aria-expanded={open}
             className="w-10 p-0"
-            disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
+            disabled={isSelectionDisabled}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           </Button>
@@ -188,7 +162,7 @@ export const SpreadsheetSelector = ({
         type="button"
         className="w-10 p-0"
         onClick={onRefresh}
-        disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
+        disabled={isSelectionDisabled}
         title="Rafraîchir la liste"
       >
         <RefreshCcw className="h-4 w-4" />

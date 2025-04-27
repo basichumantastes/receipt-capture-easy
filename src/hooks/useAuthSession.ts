@@ -18,10 +18,8 @@ export const useAuthSession = () => {
   const [hasRequiredScopes, setHasRequiredScopes] = useState<boolean>(false);
   const isAuthenticated = !!user;
 
-  // Vérifier si le token a les scopes nécessaires
+  // Vérifier si le token a les scopes nécessaires (simplification)
   const checkScopes = (currentSession: Session | null) => {
-    // Si nous avons un provider_token, considérer qu'on a les scopes (simplification)
-    // Une vérification plus stricte nécessiterait de décoder le JWT ou d'appeler une API Google
     const hasToken = !!currentSession?.provider_token;
     console.log("Provider token présent:", hasToken);
     setHasRequiredScopes(hasToken);
@@ -41,19 +39,10 @@ export const useAuthSession = () => {
         setUser(currentSession?.user ?? null);
         
         if (currentSession) {
-          const hasScopes = checkScopes(currentSession);
+          checkScopes(currentSession);
+          
           if (event === 'SIGNED_IN') {
-            if (hasScopes) {
-              toast.success(`Connecté en tant que ${currentSession.user.email}`);
-            } else {
-              toast.warning("Autorisations Google insuffisantes. Veuillez vous reconnecter.");
-              // Si l'utilisateur n'a pas les scopes requis, on le déconnecte
-              setTimeout(() => {
-                supabase.auth.signOut().then(() => {
-                  toast.info("Vous avez été déconnecté en raison d'autorisations insuffisantes");
-                });
-              }, 2000);
-            }
+            toast.success(`Connecté en tant que ${currentSession.user.email}`);
           }
         }
         
@@ -62,16 +51,6 @@ export const useAuthSession = () => {
           clearSettingsCache();
           toast.info("Déconnecté");
           setHasRequiredScopes(false);
-        }
-        
-        if (event === 'TOKEN_REFRESHED') {
-          console.log("Token refreshed successfully");
-          checkScopes(currentSession);
-        }
-        
-        if (event === 'USER_UPDATED') {
-          console.log("User updated");
-          checkScopes(currentSession);
         }
       }
     );

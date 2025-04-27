@@ -9,6 +9,52 @@ export interface SpreadsheetInfo {
   createdTime: string;
 }
 
+// Configuration status
+export enum GoogleApiStatus {
+  READY,
+  NEEDS_AUTH,
+  NEEDS_API_ACTIVATION,
+  ERROR
+}
+
+/**
+ * Check if Google APIs are properly configured
+ */
+export async function checkGoogleApiStatus(session: Session | null): Promise<GoogleApiStatus> {
+  try {
+    if (!session?.access_token) {
+      return GoogleApiStatus.NEEDS_AUTH;
+    }
+    
+    if (!session?.provider_token) {
+      return GoogleApiStatus.NEEDS_AUTH;
+    }
+    
+    // Perform a test request to see if APIs are configured
+    const response = await supabase.functions.invoke('list-spreadsheets', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      body: { googleToken: session.provider_token, testMode: true }
+    });
+    
+    if (response.error) {
+      console.error("API status check error:", response.error);
+      return GoogleApiStatus.ERROR;
+    }
+    
+    if (response.data?.apiActivationRequired) {
+      return GoogleApiStatus.NEEDS_API_ACTIVATION;
+    }
+    
+    return GoogleApiStatus.READY;
+  } catch (error) {
+    console.error("Failed to check API status:", error);
+    return GoogleApiStatus.ERROR;
+  }
+}
+
+/**
+ * Fetch list of Google Spreadsheets
+ */
 export async function listSpreadsheets(session: Session | null): Promise<SpreadsheetInfo[] | null> {
   try {
     if (!session?.access_token) {
@@ -36,13 +82,11 @@ export async function listSpreadsheets(session: Session | null): Promise<Spreads
     if (error) {
       console.error("Error from list-spreadsheets function:", error);
       
-      // Check HTTP status code in the response
       if (response.error?.status === 401) {
-        toast.error("Autorisations Google insuffisantes. Veuillez vous reconnecter.");
-        // Log out to force re-authentication with correct permissions
+        toast.error("Session expirée. Veuillez vous reconnecter.");
         await supabase.auth.signOut();
       } else {
-        toast.error(`Erreur lors de la récupération des spreadsheets: ${error.message}`);
+        toast.error("Erreur lors de la récupération des spreadsheets");
       }
       
       throw error;
@@ -51,17 +95,6 @@ export async function listSpreadsheets(session: Session | null): Promise<Spreads
     // Check if Google Drive API needs to be activated
     if (data?.apiActivationRequired) {
       console.log("Google Drive API activation required");
-      toast.error(
-        "L'API Google Drive n'est pas activée",
-        {
-          description: "Vous devez activer l'API Google Drive dans votre console Google Cloud.",
-          action: {
-            label: "Activer l'API",
-            onClick: () => window.open("https://console.developers.google.com/apis/api/drive.googleapis.com/overview", "_blank")
-          },
-          duration: 10000
-        }
-      );
       return [];
     }
     

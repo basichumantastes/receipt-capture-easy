@@ -22,11 +22,12 @@ serve(async (req) => {
     // Parse the passed data to get the Google token
     const reqData = await req.json().catch(() => ({}));
     const googleToken = reqData.googleToken;
+    const testMode = reqData.testMode === true;
     
     if (!googleToken) {
       console.error("Missing Google provider token");
       return new Response(JSON.stringify({
-        error: "Missing Google provider token. Reconnection may be required.",
+        error: "Missing Google provider token",
         files: []
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -35,10 +36,49 @@ serve(async (req) => {
     }
     
     console.log("Fetching spreadsheets list from Google Drive API");
-    console.log("Google token first 15 chars:", googleToken.substring(0, 15) + "...");
     
     try {
-      // Use the Google token to call the Drive API
+      // If in test mode, just check API status
+      if (testMode) {
+        const testResponse = await fetch(
+          `https://www.googleapis.com/drive/v3/about?fields=user`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${googleToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (!testResponse.ok) {
+          const errorText = await testResponse.text();
+          console.error("Google Drive API status check failed:", testResponse.status);
+          
+          // Check for API not enabled error
+          if (errorText.includes("API has not been used") || 
+              errorText.includes("disabled") || 
+              errorText.includes("not enabled")) {
+            return new Response(JSON.stringify({ apiActivationRequired: true }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            });
+          }
+          
+          return new Response(JSON.stringify({ error: `API status check failed: ${testResponse.statusText}` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: testResponse.status
+          });
+        }
+        
+        // API is accessible
+        return new Response(JSON.stringify({ status: "API accessible" }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }
+      
+      // Regular mode - get spreadsheets
       const response = await fetch(
         `https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name,createdTime)`, 
         {
@@ -53,25 +93,24 @@ serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Google Drive API error status:", response.status);
-        console.error("Google Drive API error details:", errorText);
         
-        // Check for API not enabled error (common during development)
-        if (errorText.includes("API has not been used") || errorText.includes("disabled")) {
+        // Check for API not enabled error
+        if (errorText.includes("API has not been used") || 
+            errorText.includes("disabled") || 
+            errorText.includes("not enabled")) {
           return new Response(JSON.stringify({ 
-            error: "L'API Google Drive n'est pas activée dans votre projet Google Cloud. Vous devez l'activer dans la console Google Cloud.",
-            files: [],
-            details: errorText,
-            apiActivationRequired: true
+            apiActivationRequired: true,
+            details: errorText
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 403,
+            status: 200,
           });
         }
         
-        // Specific error for authentication issues
+        // Authentication issues
         if (response.status === 401) {
           return new Response(JSON.stringify({ 
-            error: "Erreur d'authentification Google Drive. Veuillez vous reconnecter avec les permissions appropriées.",
+            error: "Erreur d'authentification Google Drive",
             files: [],
             details: errorText
           }), {
