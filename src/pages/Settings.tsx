@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSheetsConfig, SettingsFormValues } from "@/components/settings/GoogleSheetsConfig";
-import { fetchSettings, saveSettings } from "@/services/settingsService";
+import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 
-const Settings = () => {
+const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
@@ -46,7 +46,7 @@ const Settings = () => {
       toast("Paramètres sauvegardés", {
         description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
       toast("Erreur", {
         description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
@@ -86,4 +86,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SettingsPage;

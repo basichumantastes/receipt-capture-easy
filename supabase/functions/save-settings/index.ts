@@ -8,8 +8,8 @@ const corsHeaders = {
 };
 
 interface SettingsData {
-  spreadsheetId: string;
-  sheetName: string;
+  spreadsheetId?: string;
+  sheetName?: string;
 }
 
 serve(async (req) => {

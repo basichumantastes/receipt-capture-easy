@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
 export interface Settings {
-  spreadsheetId: string;
-  sheetName: string;
+  spreadsheetId?: string;
+  sheetName?: string;
 }
 
 export async function fetchSettings(session: Session | null): Promise<Settings | null> {
@@ -28,6 +28,11 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
   try {
     if (!session?.access_token) {
       throw new Error("You must be logged in to save settings");
+    }
+    
+    // Validate required fields before saving
+    if (!data.spreadsheetId || !data.sheetName) {
+      throw new Error("Spreadsheet ID and sheet name are required");
     }
     
     // Save settings using edge function

@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Submit from "./pages/Submit";
-import Settings from "./pages/Settings";
+import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -33,7 +33,7 @@ const App = () => (
               } />
               <Route path="settings" element={
                 <ProtectedRoute>
-                  <Settings />
+                  <SettingsPage />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
