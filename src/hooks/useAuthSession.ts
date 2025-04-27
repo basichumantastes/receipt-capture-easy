@@ -103,7 +103,6 @@ export const useAuthSession = () => {
       await supabase.auth.signOut();
       clearSettingsCache();
       
-      // Utiliser l'URL complète pour la redirection
       const redirectUrl = `${window.location.origin}/login`;
       
       console.log("Redirecting to:", redirectUrl);
@@ -138,9 +137,6 @@ export const useAuthSession = () => {
       
       // S'assurer que le cache est nettoyé
       clearSettingsCache();
-      
-      // Afficher un toast pour indiquer à l'utilisateur ce qu'il doit faire
-      toast.info("Pour une nouvelle connexion complète, veuillez aussi révoquer l'accès dans votre compte Google");
     } catch (error: any) {
       console.error("Erreur de déconnexion:", error);
       toast.error(`Échec de la déconnexion: ${error.message}`);
