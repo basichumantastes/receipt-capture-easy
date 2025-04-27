@@ -11,9 +11,12 @@ export const useAuthSession = () => {
   const isAuthenticated = !!user;
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -23,17 +26,25 @@ export const useAuthSession = () => {
         if (event === 'SIGNED_OUT') {
           toast.info("Déconnecté");
         }
+        if (event === 'TOKEN_REFRESHED') {
+          console.log("Token refreshed successfully");
+        }
+        if (event === 'USER_UPDATED') {
+          console.log("User updated");
+        }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", currentSession?.user?.email || "No session");
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
     });
 
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);

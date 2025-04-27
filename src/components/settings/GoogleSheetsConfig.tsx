@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table2, FileSpreadsheet } from "lucide-react";
+import { Table2, FileSpreadsheet, Loader2 } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -40,7 +40,14 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues,
+    mode: "onChange",
   });
+  
+  React.useEffect(() => {
+    if (defaultValues.spreadsheetId || defaultValues.sheetName) {
+      form.reset(defaultValues);
+    }
+  }, [defaultValues, form]);
 
   return (
     <Card>
@@ -107,8 +114,13 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
             </div>
             
             <div className="flex justify-end">
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? "Enregistrement..." : "Enregistrer les paramètres"}
+              <Button type="submit" disabled={isSaving || !form.formState.isValid}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : "Enregistrer les paramètres"}
               </Button>
             </div>
           </form>

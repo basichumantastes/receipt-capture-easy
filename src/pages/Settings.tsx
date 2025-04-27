@@ -6,11 +6,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSheetsConfig, SettingsFormValues } from "@/components/settings/GoogleSheetsConfig";
 import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Default values that will be updated if we have stored settings
   const [defaultValues, setDefaultValues] = useState<Partial<SettingsFormValues>>({
@@ -21,12 +25,26 @@ const SettingsPage = () => {
   // Fetch existing settings
   useEffect(() => {
     const getSettings = async () => {
-      if (!isAuthenticated) return;
+      if (!isAuthenticated) {
+        setIsLoading(false);
+        return;
+      }
       
-      const existingSettings = await fetchSettings(session);
+      setIsLoading(true);
+      setError(null);
       
-      if (existingSettings) {
-        setDefaultValues(existingSettings);
+      try {
+        const existingSettings = await fetchSettings(session);
+        
+        if (existingSettings) {
+          console.log("Loaded existing settings:", existingSettings);
+          setDefaultValues(existingSettings);
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+        setError("Impossible de récupérer les paramètres existants");
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -35,12 +53,13 @@ const SettingsPage = () => {
 
   const onSubmit = async (data: SettingsFormValues) => {
     setIsSaving(true);
+    setError(null);
     
     try {
       const result = await saveSettings(data, session);
       
       if (!result.success) {
-        throw result.error || new Error("Unknown error occurred");
+        throw result.error || new Error("Erreur inconnue");
       }
       
       toast("Paramètres sauvegardés", {
@@ -48,6 +67,9 @@ const SettingsPage = () => {
       });
     } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
+      
+      setError(error.message || "Une erreur s'est produite lors de la sauvegarde des paramètres");
+      
       toast("Erreur", {
         description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
         style: { backgroundColor: 'hsl(var(--destructive))' }
@@ -75,13 +97,28 @@ const SettingsPage = () => {
     <div className="container max-w-5xl py-12">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Paramètres</h1>
       
-      <div className="grid gap-8">
-        <GoogleSheetsConfig 
-          defaultValues={defaultValues}
-          onSubmit={onSubmit}
-          isSaving={isSaving}
-        />
-      </div>
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erreur</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Chargement des paramètres...</span>
+        </div>
+      ) : (
+        <div className="grid gap-8">
+          <GoogleSheetsConfig 
+            defaultValues={defaultValues}
+            onSubmit={onSubmit}
+            isSaving={isSaving}
+          />
+        </div>
+      )}
     </div>
   );
 };

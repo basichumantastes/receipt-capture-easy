@@ -21,7 +21,11 @@ serve(async (req) => {
   try {
     const authorization = req.headers.get('Authorization');
     if (!authorization) {
-      throw new Error('Missing Authorization header');
+      console.error("Missing Authorization header");
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      });
     }
     
     // Create a Supabase client with the auth token
@@ -37,15 +41,32 @@ serve(async (req) => {
     // Get user info from the session
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    if (userError) {
+      console.error("Auth error:", userError);
+      return new Response(JSON.stringify({ error: 'Authentication error: ' + userError.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      });
+    }
+    
+    if (!user) {
+      console.error("No authenticated user found");
+      return new Response(JSON.stringify({ error: 'No authenticated user found' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      });
     }
     
     // Get the settings data from the request body
     const settingsData = await req.json() as SettingsData;
+    console.log("Received settings data:", settingsData);
     
     if (!settingsData.spreadsheetId || !settingsData.sheetName) {
-      throw new Error('Missing required settings fields');
+      console.error("Missing required settings fields");
+      return new Response(JSON.stringify({ error: 'Missing required settings fields' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
     }
     
     // Check if settings already exist for this user
@@ -55,42 +76,67 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
     
-    let result;
-    
-    if (existingSettings) {
-      // Update existing settings
-      const { data, error } = await supabase
-        .from('user_settings')
-        .update({
-          settings: settingsData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id)
-        .select();
-        
-      if (error) throw error;
-      result = data;
-    } else {
-      // Insert new settings
-      const { data, error } = await supabase
-        .from('user_settings')
-        .insert({
-          user_id: user.id,
-          settings: settingsData,
-        })
-        .select();
-        
-      if (error) throw error;
-      result = data;
+    if (fetchError) {
+      console.error("Error fetching existing settings:", fetchError);
+      return new Response(JSON.stringify({ error: 'Error fetching existing settings: ' + fetchError.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      });
     }
     
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: "Settings saved successfully",
-      data: result
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    let result;
+    
+    try {
+      if (existingSettings) {
+        // Update existing settings
+        const { data, error } = await supabase
+          .from('user_settings')
+          .update({
+            settings: settingsData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select();
+          
+        if (error) {
+          console.error("Error updating settings:", error);
+          throw error;
+        }
+        result = data;
+      } else {
+        // Insert new settings
+        const { data, error } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: user.id,
+            settings: settingsData,
+          })
+          .select();
+          
+        if (error) {
+          console.error("Error inserting settings:", error);
+          throw error;
+        }
+        result = data;
+      }
+      
+      console.log("Settings saved successfully:", result);
+      
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: "Settings saved successfully",
+        data: result
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      });
+    } catch (dbError) {
+      console.error("Database operation error:", dbError);
+      return new Response(JSON.stringify({ error: 'Database operation failed: ' + dbError.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      });
+    }
   } catch (error) {
     console.error("Error in save-settings function:", error);
     

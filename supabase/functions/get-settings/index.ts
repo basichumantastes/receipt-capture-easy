@@ -16,12 +16,18 @@ serve(async (req) => {
   try {
     const authorization = req.headers.get('Authorization');
     if (!authorization) {
-      throw new Error('Missing Authorization header');
+      console.error("Missing Authorization header");
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      });
     }
     
     // Create a Supabase client with the auth token
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    
+    console.log("Creating Supabase client with URL:", supabaseUrl);
     
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: {
@@ -32,9 +38,23 @@ serve(async (req) => {
     // Get user info from the session
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    if (userError) {
+      console.error("Auth error:", userError);
+      return new Response(JSON.stringify({ error: 'Authentication error: ' + userError.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      });
     }
+    
+    if (!user) {
+      console.error("No authenticated user found");
+      return new Response(JSON.stringify({ error: 'No authenticated user found' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      });
+    }
+    
+    console.log("Fetching settings for user ID:", user.id);
     
     // Get the user's settings
     const { data: settings, error } = await supabase
@@ -43,7 +63,15 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching settings:", error);
+      return new Response(JSON.stringify({ error: 'Error fetching settings: ' + error.message }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      });
+    }
+    
+    console.log("Settings retrieved:", settings);
     
     return new Response(JSON.stringify(settings?.settings || {}), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
