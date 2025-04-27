@@ -116,7 +116,7 @@ const Settings = () => {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
       toast("Erreur", {
         description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
-        variant: "destructive"
+        style: { backgroundColor: 'hsl(var(--destructive))' }
       });
     } finally {
       setIsSaving(false);
