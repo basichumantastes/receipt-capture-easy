@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { SpreadsheetSelector } from "./SpreadsheetSelector";
 import { listSpreadsheets, SpreadsheetInfo, checkGoogleApiStatus, GoogleApiStatus, listWorksheets, WorksheetInfo } from "@/services/googleSheetsService";
 import { useAuth } from "@/contexts/AuthContext";
 import { Settings } from "@/services/settingsService";
-import { Loader2, AlertCircle, FileSpreadsheet } from "lucide-react";
+import { Loader2, AlertCircle, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -116,15 +115,23 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
       
       <CardContent className="space-y-4">
         {selectedSpreadsheet ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <FileSpreadsheet className="h-6 w-6 text-green-600" />
-              <div>
-                <h3 className="font-medium text-green-900">Google Sheets actuel</h3>
-                <p className="text-sm text-green-700">{selectedSpreadsheet.name}</p>
+          <a 
+            href={`https://docs.google.com/spreadsheets/d/${defaultValues.spreadsheetId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="bg-card hover:bg-accent transition-colors border rounded-lg p-4 cursor-pointer group">
+              <div className="flex items-center gap-3">
+                <LinkIcon className="h-6 w-6 text-primary" />
+                <div className="flex-grow">
+                  <h3 className="font-medium">Google Sheets actuel</h3>
+                  <p className="text-sm text-muted-foreground">{selectedSpreadsheet.name}</p>
+                </div>
+                <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
-          </div>
+          </a>
         ) : (
           <p className="text-sm text-muted-foreground">
             Sélectionnez un Google Sheets pour stocker vos dépenses
