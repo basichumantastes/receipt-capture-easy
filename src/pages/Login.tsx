@@ -2,26 +2,32 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Login = () => {
   const { isAuthenticated, login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get redirect path from query parameters
   const from = new URLSearchParams(location.search).get('from') || '/';
   
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      console.log("User authenticated, redirecting to:", from);
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
+
+  const handleLogin = async () => {
+    try {
+      await login();
+    } catch (error) {
+      // Log errors for developers instead of showing them to users
+      console.error("Login error:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -36,65 +42,11 @@ const Login = () => {
       <Card className="w-full shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Connexion</CardTitle>
-          <CardDescription className="text-base">
-            Connectez-vous avec votre compte Google pour accéder à l'application
-          </CardDescription>
         </CardHeader>
         
-        <CardContent className="flex flex-col items-center gap-4">
-          <Alert className="bg-blue-50 border-blue-200 mb-4">
-            <AlertDescription className="text-blue-800 text-sm">
-              Cette application demande l'accès à Google Sheets et à Google Drive (en lecture seule) 
-              pour fonctionner correctement.
-            </AlertDescription>
-          </Alert>
-          
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="mb-4 w-full text-sm">
-                Comment ça fonctionne ?
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Processus d'authentification</DialogTitle>
-                <DialogDescription>
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <h3 className="font-medium mb-2">Étape 1: Authentification Supabase</h3>
-                      <p className="text-sm">
-                        Nous utilisons Supabase comme service d'authentification sécurisé. 
-                        Vous serez d'abord redirigé vers Supabase pour l'authentification.
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="font-medium mb-2">Étape 2: Autorisation Google</h3>
-                      <p className="text-sm">
-                        Après authentification, vous serez redirigé vers Google pour autoriser 
-                        l'accès à vos spreadsheets et documents Google Drive (en lecture seule).
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="font-medium mb-2">Étape 3: Configuration Google Cloud</h3>
-                      <p className="text-sm">
-                        Si c'est votre première utilisation, vous devrez peut-être activer l'API Google Drive 
-                        dans la console Google Cloud. Des instructions vous seront fournies dans l'application.
-                      </p>
-                    </div>
-                    <div className="pt-2">
-                      <p className="text-sm font-medium">
-                        Ce processus est standard pour les applications qui utilisent les API Google et respecte 
-                        les meilleures pratiques de sécurité.
-                      </p>
-                    </div>
-                  </div>
-                </DialogDescription>
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
-          
+        <CardContent className="flex flex-col items-center">
           <Button 
-            onClick={login}
+            onClick={handleLogin}
             className="w-full flex items-center gap-2"
           >
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
@@ -108,21 +60,6 @@ const Login = () => {
             Se connecter avec Google
           </Button>
         </CardContent>
-        
-        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col gap-2">
-          <p>
-            Si vous rencontrez des problèmes d'autorisation, vous pouvez révoquer les accès 
-            précédents et vous reconnecter.
-          </p>
-          <a 
-            href="https://myaccount.google.com/permissions" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-primary hover:underline"
-          >
-            Gérer les autorisations dans Google
-          </a>
-        </CardFooter>
       </Card>
     </div>
   );
