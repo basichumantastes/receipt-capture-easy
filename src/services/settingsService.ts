@@ -37,12 +37,14 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
     
     console.log("Settings received:", userSettings);
     
-    // Mettre en cache les paramètres récupérés
+    // Mettre en cache les paramètres récupérés et conversion du type JSON vers Settings
     if (userSettings?.settings) {
-      settingsCache = userSettings.settings;
+      const typedSettings = userSettings.settings as unknown as Settings;
+      settingsCache = typedSettings;
+      return typedSettings;
     }
     
-    return userSettings?.settings || null;
+    return null;
   } catch (error) {
     console.error("Error fetching settings:", error);
     return null;
@@ -62,12 +64,12 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
 
     console.log("Saving settings:", data);
     
-    // Try to upsert the settings
+    // Try to upsert the settings - convert Settings to Json type for Supabase
     const { error } = await supabase
       .from('user_settings')
       .upsert({
         user_id: session.user.id,
-        settings: data
+        settings: data as any // Use type assertion to satisfy TypeScript
       }, {
         onConflict: 'user_id'
       });
