@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { GoogleSheetsForm } from "./GoogleSheetsForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
@@ -61,6 +60,9 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
     });
   };
 
+  // Find currently selected spreadsheet name
+  const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
+
   return (
     <Card>
       <CardHeader>
@@ -76,14 +78,22 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
           )}
         </CardTitle>
         <CardDescription>
-          Connectez votre application à un Google Sheets pour stocker vos dépenses
+          {selectedSpreadsheet ? (
+            <div className="text-sm text-muted-foreground mt-2">
+              Spreadsheet actuel : <span className="font-medium">{selectedSpreadsheet.name}</span>
+            </div>
+          ) : (
+            "Sélectionnez un Google Sheets pour stocker vos dépenses"
+          )}
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
         <div className="flex flex-col space-y-1.5">
-          <label htmlFor="spreadsheet" className="font-medium flex justify-between">
-            <span>Google Sheets</span>
+          <div className="flex justify-between items-center">
+            <label htmlFor="spreadsheet" className="font-medium">
+              Google Sheets
+            </label>
             <SpreadsheetSelector 
               spreadsheets={spreadsheets}
               isLoading={isLoading}
@@ -92,7 +102,7 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
               selectedId={defaultValues.spreadsheetId}
               apiStatus={apiStatus}
             />
-          </label>
+          </div>
           
           {apiStatus === GoogleApiStatus.READY && spreadsheets.length === 0 && !isLoading && (
             <p className="text-sm text-muted-foreground">
@@ -110,13 +120,6 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
             </div>
           )}
         </div>
-        
-        <GoogleSheetsForm 
-          defaultValues={defaultValues}
-          onSubmit={onSubmit}
-          disabled={isLoading || apiStatus !== GoogleApiStatus.READY}
-          isSaving={isSaving}
-        />
       </CardContent>
       
       <CardFooter className="flex justify-between border-t pt-4 pb-2">
