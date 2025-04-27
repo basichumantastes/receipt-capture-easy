@@ -1,0 +1,29 @@
+
+// Example for Vercel serverless function - /api/login.js
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    const { credential } = req.body;
+    
+    if (!credential) {
+      return res.status(400).json({ error: 'No credential provided' });
+    }
+    
+    // In a production app, you would verify the token here
+    // using the Google OAuth API
+    
+    // For this example, we'll just set a cookie with the token
+    // This is a simplification - a real implementation would use
+    // secure, HttpOnly cookies with proper expiration
+    res.setHeader('Set-Cookie', `auth_token=${credential}; Path=/; HttpOnly; SameSite=Strict; Secure`);
+    
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ error: 'Authentication failed' });
+  }
+}
