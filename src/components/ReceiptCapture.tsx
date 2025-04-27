@@ -1,13 +1,12 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 const ReceiptCapture = ({ onImageCapture }: { onImageCapture: (imageData: string) => void }) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     // Start camera immediately when component mounts
@@ -28,8 +27,8 @@ const ReceiptCapture = ({ onImageCapture }: { onImageCapture: (imageData: string
       });
       setStream(mediaStream);
       
-      if (videoRef) {
-        videoRef.srcObject = mediaStream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
       }
     } catch (error) {
       console.error("Error accessing camera:", error);
@@ -38,11 +37,11 @@ const ReceiptCapture = ({ onImageCapture }: { onImageCapture: (imageData: string
   };
 
   const captureImage = () => {
-    if (!videoRef) return;
+    if (!videoRef.current) return;
 
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.videoWidth;
-    canvas.height = videoRef.videoHeight;
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
     const context = canvas.getContext('2d');
     
     if (!context) {
@@ -50,7 +49,7 @@ const ReceiptCapture = ({ onImageCapture }: { onImageCapture: (imageData: string
       return;
     }
 
-    context.drawImage(videoRef, 0, 0);
+    context.drawImage(videoRef.current, 0, 0);
     const imageData = canvas.toDataURL('image/jpeg');
     
     // Stop the camera stream
@@ -65,7 +64,7 @@ const ReceiptCapture = ({ onImageCapture }: { onImageCapture: (imageData: string
   return (
     <div className="relative w-full h-[calc(100vh-8rem)]">
       <video
-        ref={ref => setVideoRef(ref)}
+        ref={videoRef}
         autoPlay
         playsInline
         className="w-full h-full object-cover"
