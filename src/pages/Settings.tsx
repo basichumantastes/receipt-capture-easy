@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -22,34 +22,35 @@ const SettingsPage = () => {
     sheetName: "Dépenses",
   });
   
+  // Memoize settings fetching to prevent unnecessary re-renders
+  const getSettings = useCallback(async () => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const existingSettings = await fetchSettings(session);
+      
+      if (existingSettings) {
+        console.log("Loaded existing settings:", existingSettings);
+        setDefaultValues(existingSettings);
+      }
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+      setError("Impossible de récupérer les paramètres existants");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, session]);
+  
   // Fetch existing settings
   useEffect(() => {
-    const getSettings = async () => {
-      if (!isAuthenticated) {
-        setIsLoading(false);
-        return;
-      }
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const existingSettings = await fetchSettings(session);
-        
-        if (existingSettings) {
-          console.log("Loaded existing settings:", existingSettings);
-          setDefaultValues(existingSettings);
-        }
-      } catch (err) {
-        console.error("Failed to fetch settings:", err);
-        setError("Impossible de récupérer les paramètres existants");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     getSettings();
-  }, [isAuthenticated, session]);
+  }, [getSettings]);
 
   const onSubmit = async (data: Settings) => {
     setIsSaving(true);
@@ -61,6 +62,9 @@ const SettingsPage = () => {
       if (!result.success) {
         throw result.error || new Error("Erreur inconnue");
       }
+      
+      // Update defaultValues without refetching from the server
+      setDefaultValues(data);
       
       toast("Paramètres sauvegardés", {
         description: "Vos paramètres Google Sheets ont été mis à jour avec succès."

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
@@ -27,7 +28,8 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
   const [isLoadingWorksheets, setIsLoadingWorksheets] = useState(false);
   const [apiStatus, setApiStatus] = useState<GoogleApiStatus>(GoogleApiStatus.NEEDS_AUTH);
   
-  const getSpreadsheets = async () => {
+  // Memoize getSpreadsheets to prevent unnecessary re-renders
+  const getSpreadsheets = useCallback(async () => {
     if (!session) return;
     
     setIsLoading(true);
@@ -48,9 +50,10 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
   
-  const getWorksheets = async (spreadsheetId: string) => {
+  // Memoize getWorksheets to prevent unnecessary re-renders
+  const getWorksheets = useCallback(async (spreadsheetId: string) => {
     if (!session || !spreadsheetId) return;
     
     setIsLoadingWorksheets(true);
@@ -65,17 +68,17 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
     } finally {
       setIsLoadingWorksheets(false);
     }
-  };
+  }, [session]);
   
   useEffect(() => {
     getSpreadsheets();
-  }, [session]);
+  }, [getSpreadsheets]);
   
   useEffect(() => {
     if (defaultValues.spreadsheetId) {
       getWorksheets(defaultValues.spreadsheetId);
     }
-  }, [defaultValues.spreadsheetId, session]);
+  }, [defaultValues.spreadsheetId, getWorksheets]);
   
   const handleSelectSpreadsheet = async (spreadsheetId: string, name: string) => {
     await onSubmit({

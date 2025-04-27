@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -72,12 +73,17 @@ export async function listWorksheets(session: Session | null, spreadsheetId: str
       return [];
     }
     
+    console.log("Fetching worksheets for spreadsheet ID:", spreadsheetId);
+    
     const response = await supabase.functions.invoke('list-worksheets', {
       headers: { Authorization: `Bearer ${session.access_token}` },
       body: { 
         googleToken: session.provider_token,
         spreadsheetId 
       }
+    }).catch(err => {
+      console.error("Error invoking list-worksheets function:", err);
+      throw new Error("Erreur lors de la communication avec le serveur");
     });
     
     const { data, error } = response;
@@ -122,6 +128,9 @@ export async function listSpreadsheets(session: Session | null): Promise<Spreads
     const response = await supabase.functions.invoke('list-spreadsheets', {
       headers: { Authorization: `Bearer ${session.access_token}` },
       body: { googleToken: session.provider_token }
+    }).catch(err => {
+      console.error("Error invoking list-spreadsheets function:", err);
+      throw new Error("Erreur lors de la communication avec le serveur");
     });
     
     const { data, error } = response;
