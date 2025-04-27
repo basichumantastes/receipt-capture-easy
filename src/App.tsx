@@ -10,22 +10,9 @@ import Submit from "./pages/Submit";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, loading } = useAuth();
-  
-  if (loading) return null;
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -35,25 +22,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<Login />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
-              <Route 
-                path="submit" 
-                element={
-                  <ProtectedRoute>
-                    <Submit />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="settings" 
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="login" element={<Login />} />
+              <Route path="submit" element={<Submit />} />
+              <Route path="settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
