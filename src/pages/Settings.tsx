@@ -109,16 +109,14 @@ const Settings = () => {
         // This is not critical, so we'll just log it and continue
       }
       
-      toast({
-        title: "Paramètres sauvegardés",
-        description: "Vos paramètres Google Sheets ont été mis à jour avec succès.",
+      toast("Paramètres sauvegardés", {
+        description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
       });
     } catch (error) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
-      toast({
-        title: "Erreur",
+      toast("Erreur", {
         description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
