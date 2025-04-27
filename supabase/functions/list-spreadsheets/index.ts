@@ -49,14 +49,22 @@ serve(async (req) => {
         if (response.status === 401) {
           return new Response(JSON.stringify({ 
             error: "Erreur d'authentification Google Drive. Veuillez vous reconnecter avec les permissions appropriées.",
-            files: [] 
+            files: [],
+            details: errorText
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 401,
           });
         }
         
-        throw new Error(`Google Drive API error: ${response.statusText}`);
+        return new Response(JSON.stringify({
+          error: `Erreur API Google Drive: ${response.statusText}`,
+          files: [],
+          details: errorText
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: response.status
+        });
       }
       
       const result = await response.json();
@@ -80,13 +88,23 @@ serve(async (req) => {
       });
     } catch (apiError: any) {
       console.error("API request error:", apiError.message);
-      throw apiError;
+      
+      return new Response(JSON.stringify({ 
+        error: apiError.message,
+        files: []
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
     }
     
   } catch (error: any) {
     console.error("Error in list-spreadsheets function:", error);
     
-    return new Response(JSON.stringify({ error: error.message, files: [] }), {
+    return new Response(JSON.stringify({ 
+      error: error.message, 
+      files: [] 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

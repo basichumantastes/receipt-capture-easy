@@ -18,15 +18,17 @@ export async function listSpreadsheets(session: Session | null): Promise<Spreads
     
     console.log("Fetching spreadsheets list with session access token");
     
-    const { data, error, status } = await supabase.functions.invoke('list-spreadsheets', {
+    const response = await supabase.functions.invoke('list-spreadsheets', {
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
+    
+    const { data, error } = response;
     
     if (error) {
       console.error("Error from list-spreadsheets function:", error);
       
-      // Afficher un message à l'utilisateur en fonction de l'erreur
-      if (status === 401) {
+      // Vérifier le code HTTP dans la réponse
+      if (response.error?.status === 401) {
         toast.error("Autorisations Google insuffisantes. Veuillez vous reconnecter.");
         // Déconnexion pour forcer la reconnexion avec les bonnes permissions
         await supabase.auth.signOut();
@@ -52,8 +54,9 @@ export async function listSpreadsheets(session: Session | null): Promise<Spreads
     
     console.log("Spreadsheets list received:", data.files.length || 0, "items");
     return data.files || [];
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching spreadsheets list:", error);
+    toast.error(`Erreur: ${error.message || "Échec de la récupération des Google Sheets"}`);
     return [];
   }
 }

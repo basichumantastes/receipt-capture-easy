@@ -126,10 +126,10 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
       </CardHeader>
       <CardContent>
         {loadError && (
-          <Alert variant="warning" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
+          <Alert variant="default" className="mb-6 bg-orange-50 border-orange-200">
+            <AlertCircle className="h-4 w-4 text-orange-800" />
             <AlertTitle>Attention</AlertTitle>
-            <AlertDescription>{loadError}</AlertDescription>
+            <AlertDescription className="text-orange-800">{loadError}</AlertDescription>
           </Alert>
         )}
         
