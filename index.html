@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
   <head>
@@ -7,6 +6,9 @@
     <title>Receipt Capture Easy - Capture et envoi de notes de frais</title>
     <meta name="description" content="Numérisez vos tickets de caisse et envoyez-les directement à Google Sheets sans effort" />
     <meta name="author" content="Receipt Capture" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 
     <meta property="og:title" content="Receipt Capture Easy - Capture et envoi de notes de frais" />
     <meta property="og:description" content="Numérisez vos tickets de caisse et envoyez-les directement à Google Sheets sans effort" />
@@ -17,11 +19,22 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
   </head>
-
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('Service Worker registered:', registration);
+            })
+            .catch(error => {
+              console.log('Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
