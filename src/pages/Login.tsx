@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,7 @@ const Login = () => {
   const from = new URLSearchParams(location.search).get('from') || '/';
   
   // Si déjà authentifié, rediriger
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
     }
