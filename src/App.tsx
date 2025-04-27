@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Submit from "./pages/Submit";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -25,6 +26,7 @@ const App = () => (
               <Route index element={<Home />} />
               <Route path="login" element={<Login />} />
               <Route path="submit" element={<Submit />} />
+              <Route path="settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

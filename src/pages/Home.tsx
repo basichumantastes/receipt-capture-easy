@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,14 +68,27 @@ const Home = () => {
         <h2 className="text-3xl font-bold tracking-tight">
           Prêt à soumettre votre note de frais ?
         </h2>
-        <Button 
-          size="lg" 
-          onClick={() => navigate('/submit')}
-          className="gap-2 mx-auto px-12 py-6"
-        >
-          <Upload className="h-6 w-6" />
-          Envoyer un reçu
-        </Button>
+        <div className="space-y-4">
+          <Button 
+            size="lg" 
+            onClick={() => navigate('/submit')}
+            className="gap-2 w-full sm:w-auto sm:px-12 py-6"
+          >
+            <Upload className="h-6 w-6" />
+            Envoyer un reçu
+          </Button>
+          
+          <div>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/settings')}
+              className="gap-2 mt-4"
+            >
+              <Settings className="h-5 w-5" />
+              Configurer Google Sheets
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
