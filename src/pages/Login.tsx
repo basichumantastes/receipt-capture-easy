@@ -1,9 +1,9 @@
-
 import React, { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, Bug } from "lucide-react";
 import { toast } from "sonner";
 
 // Define Google Sign-In types
@@ -22,7 +22,7 @@ declare global {
 }
 
 const Login = () => {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, loginAsTestUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -98,6 +98,11 @@ const Login = () => {
     };
   }, [isAuthenticated, login, navigate, from]);
 
+  const handleTestLogin = () => {
+    loginAsTestUser();
+    navigate(from, { replace: true });
+  };
+
   return (
     <div className="container max-w-md py-16">
       <Card className="w-full">
@@ -117,6 +122,20 @@ const Login = () => {
             <div ref={buttonRef} className="google-signin-button"></div>
           )}
         </CardContent>
+        <CardFooter className="flex flex-col">
+          <div className="w-full border-t my-4"></div>
+          <Button 
+            variant="outline" 
+            onClick={handleTestLogin}
+            className="w-full flex items-center gap-2"
+          >
+            <Bug className="h-4 w-4" />
+            <span>Connexion en mode test</span>
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Ce mode permet de tester l'application sans configurer OAuth
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

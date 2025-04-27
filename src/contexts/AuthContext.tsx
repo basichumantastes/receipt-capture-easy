@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +15,7 @@ interface AuthContextType {
   login: (credential: string) => void;
   logout: () => void;
   loading: boolean;
+  loginAsTestUser: () => void; // Nouvelle fonction pour la connexion de test
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   loading: true,
+  loginAsTestUser: () => {}, // Initialisation de la fonction de test
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -83,6 +84,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Fonction de connexion de test
+  const loginAsTestUser = () => {
+    const testUser: User = {
+      id: "test-user-id",
+      email: "test@example.com",
+      name: "Utilisateur Test",
+      imageUrl: "https://ui-avatars.com/api/?name=Test+User&background=0D8ABC&color=fff",
+    };
+    
+    const testToken = "test-token-12345";
+    
+    // Stocker dans localStorage pour simuler la persistance
+    localStorage.setItem("auth_token", testToken);
+    
+    setToken(testToken);
+    setUser(testUser);
+    
+    toast.success(`Connecté en mode test en tant que ${testUser.name}`);
+  };
+
   const logout = () => {
     localStorage.removeItem("auth_token");
     setToken(null);
@@ -115,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         loading,
+        loginAsTestUser,
       }}
     >
       {children}
