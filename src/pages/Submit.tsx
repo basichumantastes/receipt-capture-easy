@@ -2,12 +2,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { PenLine } from "lucide-react";
-import { toast } from "sonner";
-import ReceiptCapture from "@/components/ReceiptCapture";
 import ManualInputForm from "@/components/ManualInputForm";
+import CameraView from "@/components/capture/CameraView";
+import { toast } from "sonner";
 
 const Submit = () => {
   const { isAuthenticated } = useAuth();
@@ -44,23 +41,18 @@ const Submit = () => {
     return null;
   }
 
-  if (!showManualInput) {
-    return (
-      <div className="h-[calc(100vh-4rem)]">
-        <ReceiptCapture onImageCapture={handleImageCapture} />
-        <Button
-          variant="ghost"
-          onClick={() => setShowManualInput(true)}
-          className="absolute top-4 right-4 gap-2"
-        >
-          <PenLine className="h-4 w-4" />
-          Saisie manuelle
-        </Button>
-      </div>
-    );
-  }
-
-  return <ManualInputForm capturedImage={capturedImage} />;
+  return (
+    <>
+      {!showManualInput ? (
+        <CameraView 
+          onImageCapture={handleImageCapture}
+          onManualInputClick={() => setShowManualInput(true)}
+        />
+      ) : (
+        <ManualInputForm capturedImage={capturedImage} />
+      )}
+    </>
+  );
 };
 
 export default Submit;
