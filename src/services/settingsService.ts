@@ -17,30 +17,32 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
       return settingsCache;
     }
 
-    if (!session?.access_token) {
+    if (!session?.user?.id) {
       console.log("No active session found when fetching settings");
       return null;
     }
     
-    console.log("Fetching settings with session access token");
+    console.log("Fetching settings from database");
     
-    const { data: existingSettings, error } = await supabase.functions.invoke('get-settings', {
-      headers: { Authorization: `Bearer ${session.access_token}` }
-    });
+    const { data: userSettings, error } = await supabase
+      .from('user_settings')
+      .select('settings')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
     
     if (error) {
-      console.error("Error from get-settings function:", error);
+      console.error("Error fetching settings:", error);
       throw error;
     }
     
-    console.log("Settings received:", existingSettings);
+    console.log("Settings received:", userSettings);
     
     // Mettre en cache les paramètres récupérés
-    if (existingSettings) {
-      settingsCache = existingSettings;
+    if (userSettings?.settings) {
+      settingsCache = userSettings.settings;
     }
     
-    return existingSettings;
+    return userSettings?.settings || null;
   } catch (error) {
     console.error("Error fetching settings:", error);
     return null;
@@ -49,7 +51,7 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
 
 export async function saveSettings(data: Settings, session: Session | null): Promise<{ success: boolean; error?: Error }> {
   try {
-    if (!session?.access_token) {
+    if (!session?.user?.id) {
       throw new Error("Vous devez être connecté pour sauvegarder les paramètres");
     }
     
@@ -60,23 +62,25 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
 
     console.log("Saving settings:", data);
     
-    // Save settings using edge function
-    const { data: result, error } = await supabase.functions.invoke('save-settings', {
-      body: data,
-      headers: {
-        Authorization: `Bearer ${session.access_token}`
-      }
-    });
+    // Try to upsert the settings
+    const { error } = await supabase
+      .from('user_settings')
+      .upsert({
+        user_id: session.user.id,
+        settings: data
+      }, {
+        onConflict: 'user_id'
+      });
     
     if (error) {
-      console.error("Error from save-settings function:", error);
+      console.error("Error saving settings:", error);
       throw error;
     }
     
     // Mettre à jour le cache avec les nouvelles données
     settingsCache = data;
     
-    console.log("Settings saved successfully:", result);
+    console.log("Settings saved successfully");
     return { success: true };
   } catch (error) {
     console.error("Error saving settings:", error);
