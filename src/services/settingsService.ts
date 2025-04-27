@@ -7,8 +7,16 @@ export interface Settings {
   sheetName?: string;
 }
 
+// Cache des paramètres pour éviter des appels répétés
+let settingsCache: Settings | null = null;
+
 export async function fetchSettings(session: Session | null): Promise<Settings | null> {
   try {
+    // Si nous avons des paramètres en cache et une session, retournons-les
+    if (settingsCache && session?.access_token) {
+      return settingsCache;
+    }
+
     if (!session?.access_token) {
       console.log("No active session found when fetching settings");
       return null;
@@ -26,6 +34,12 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
     }
     
     console.log("Settings received:", existingSettings);
+    
+    // Mettre en cache les paramètres récupérés
+    if (existingSettings) {
+      settingsCache = existingSettings;
+    }
+    
     return existingSettings;
   } catch (error) {
     console.error("Error fetching settings:", error);
@@ -59,6 +73,9 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
       throw error;
     }
     
+    // Mettre à jour le cache avec les nouvelles données
+    settingsCache = data;
+    
     // Update environment variables for edge functions if needed
     try {
       const { error: envError } = await supabase.functions.invoke('update-env-vars', {
@@ -89,4 +106,9 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
       error: error instanceof Error ? error : new Error(String(error)) 
     };
   }
+}
+
+// Fonction pour réinitialiser le cache (utile lors de la déconnexion)
+export function clearSettingsCache() {
+  settingsCache = null;
 }

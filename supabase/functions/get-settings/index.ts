@@ -73,6 +73,14 @@ serve(async (req) => {
     
     console.log("Settings retrieved:", settings);
     
+    // Gestion explicite du cas où les paramètres ne sont pas trouvés
+    if (!settings) {
+      console.log("No settings found for user, returning empty object");
+      return new Response(JSON.stringify({}), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     return new Response(JSON.stringify(settings?.settings || {}), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

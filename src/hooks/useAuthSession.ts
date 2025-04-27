@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { clearSettingsCache } from "@/services/settingsService";
 
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -24,6 +25,8 @@ export const useAuthSession = () => {
           toast.success(`Connecté en tant que ${currentSession?.user.email}`);
         }
         if (event === 'SIGNED_OUT') {
+          // Nettoyer le cache lors de la déconnexion
+          clearSettingsCache();
           toast.info("Déconnecté");
         }
         if (event === 'TOKEN_REFRESHED') {
@@ -74,6 +77,9 @@ export const useAuthSession = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // S'assurer que le cache est nettoyé
+      clearSettingsCache();
     } catch (error: any) {
       console.error("Erreur de déconnexion:", error);
       toast.error(`Échec de la déconnexion: ${error.message}`);

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
+import { fetchSettings } from "./settingsService";
 
 export interface ExpenseData {
   date: string;
@@ -21,6 +22,12 @@ export async function submitExpense(
       throw new Error("Vous devez être connecté pour soumettre une dépense");
     }
     
+    // Vérifier d'abord si les paramètres sont configurés
+    const settings = await fetchSettings(session);
+    if (!settings?.spreadsheetId || !settings?.sheetName) {
+      throw new Error("Veuillez configurer vos paramètres Google Sheets avant de soumettre une dépense");
+    }
+    
     const fullExpenseData = {
       ...expenseData,
       user_id: session.user?.id,
@@ -37,6 +44,7 @@ export async function submitExpense(
     });
     
     if (error) {
+      console.error("Error from submit-expense function:", error);
       throw new Error(error.message);
     }
     
