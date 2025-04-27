@@ -1,144 +1,50 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  imageUrl?: string;
-}
-
 interface AuthContextType {
-  isAuthenticated: boolean;
+  session: Session | null;
   user: User | null;
-  token: string | null;
-  login: (credential: string) => void;
-  logout: () => void;
   loading: boolean;
-  loginAsTestUser: () => void; // Nouvelle fonction pour la connexion de test
 }
 
 const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
+  session: null,
   user: null,
-  token: null,
-  login: () => {},
-  logout: () => {},
   loading: true,
-  loginAsTestUser: () => {}, // Initialisation de la fonction de test
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Parse token and extract user info
-  const parseToken = (token: string): User | null => {
-    try {
-      // For demonstration, decode the JWT without verification
-      // In production, token verification should happen server-side
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      
-      const payload = JSON.parse(jsonPayload);
-      
-      return {
-        id: payload.sub,
-        email: payload.email,
-        name: payload.name,
-        imageUrl: payload.picture,
-      };
-    } catch (error) {
-      console.error("Failed to parse token:", error);
-      return null;
-    }
-  };
-
-  const login = (credential: string) => {
-    try {
-      // Store token in localStorage
-      localStorage.setItem("auth_token", credential);
-      
-      // Parse user from token
-      const parsedUser = parseToken(credential);
-      if (!parsedUser) {
-        throw new Error("Invalid token format");
-      }
-      
-      setToken(credential);
-      setUser(parsedUser);
-      
-      toast.success(`Connecté en tant que ${parsedUser.name}`);
-    } catch (error) {
-      console.error("Login failed:", error);
-      toast.error("Échec de l'authentification");
-    }
-  };
-
-  // Fonction de connexion de test
-  const loginAsTestUser = () => {
-    const testUser: User = {
-      id: "test-user-id",
-      email: "test@example.com",
-      name: "Utilisateur Test",
-      imageUrl: "https://ui-avatars.com/api/?name=Test+User&background=0D8ABC&color=fff",
-    };
-    
-    const testToken = "test-token-12345";
-    
-    // Stocker dans localStorage pour simuler la persistance
-    localStorage.setItem("auth_token", testToken);
-    
-    setToken(testToken);
-    setUser(testUser);
-    
-    toast.success(`Connecté en mode test en tant que ${testUser.name}`);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("auth_token");
-    setToken(null);
-    setUser(null);
-    toast.info("Déconnecté");
-  };
-
-  // Check for existing token on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("auth_token");
-    if (storedToken) {
-      const parsedUser = parseToken(storedToken);
-      if (parsedUser) {
-        setToken(storedToken);
-        setUser(parsedUser);
-      } else {
-        // Invalid stored token
-        localStorage.removeItem("auth_token");
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated: !!user,
-        user,
-        token,
-        login,
-        logout,
-        loading,
-        loginAsTestUser,
-      }}
-    >
+    <AuthContext.Provider value={{ session, user, loading }}>
       {children}
     </AuthContext.Provider>
   );
