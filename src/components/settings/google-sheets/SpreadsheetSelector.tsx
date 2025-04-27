@@ -1,10 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/services/googleSheetsService";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 
 interface SpreadsheetSelectorProps {
   defaultValues: {
@@ -33,6 +35,12 @@ export const SpreadsheetSelector = ({
   apiStatus,
 }: SpreadsheetSelectorProps) => {
   const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filtrer les spreadsheets en fonction de la recherche
+  const filteredSpreadsheets = spreadsheets.filter(sheet => 
+    sheet.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col space-y-4">
@@ -51,40 +59,61 @@ export const SpreadsheetSelector = ({
             <SheetHeader>
               <SheetTitle>Sélectionner un Google Sheets</SheetTitle>
             </SheetHeader>
-            <div className="py-6">
-              {spreadsheets.length > 0 ? (
-                <ul className="space-y-2">
-                  {spreadsheets.map((sheet) => (
-                    <li key={sheet.id}>
-                      <button
-                        onClick={() => {
-                          onSelectSpreadsheet(sheet.id, sheet.name);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-md hover:bg-accent ${
-                          sheet.id === defaultValues.spreadsheetId
-                            ? "bg-accent"
-                            : ""
-                        }`}
-                      >
-                        <div className="font-medium">{sheet.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(sheet.createdTime).toLocaleDateString()}
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            
+            {/* Champ de recherche */}
+            <div className="py-4">
+              <div className="flex items-center border rounded-md px-3 mb-4">
+                <Search className="h-4 w-4 mr-2 opacity-50" />
+                <Input 
+                  placeholder="Rechercher un Google Sheets..." 
+                  className="flex h-9 w-full rounded-md border-0 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="py-2">
+              {filteredSpreadsheets.length > 0 ? (
+                <ScrollArea className="h-[300px] pr-4">
+                  <ul className="space-y-2">
+                    {filteredSpreadsheets.map((sheet) => (
+                      <li key={sheet.id}>
+                        <button
+                          onClick={() => {
+                            onSelectSpreadsheet(sheet.id, sheet.name);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-md hover:bg-accent ${
+                            sheet.id === defaultValues.spreadsheetId
+                              ? "bg-accent"
+                              : ""
+                          }`}
+                        >
+                          <div className="font-medium">{sheet.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(sheet.createdTime).toLocaleDateString()}
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              ) : searchQuery ? (
+                <p className="text-muted-foreground">
+                  Aucun Google Sheets ne correspond à votre recherche
+                </p>
               ) : (
                 <p className="text-muted-foreground">
                   Aucun Google Sheets trouvé sur votre compte
                 </p>
               )}
             </div>
+            
             <Button
               variant="outline"
               onClick={onRefresh}
               disabled={isLoading}
-              className="mt-2"
+              className="mt-4"
             >
               {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Actualiser la liste
