@@ -3,11 +3,17 @@ import React from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ReceiptText, LogOut } from "lucide-react";
+import { ReceiptText, LogOut, Settings } from "lucide-react";
 
 const Layout = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    // Rediriger explicitement vers la page d'accueil après déconnexion
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,6 +27,16 @@ const Layout = () => {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate("/settings")}
+                  className="hidden md:flex"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  <span>Paramètres</span>
+                </Button>
+                
                 {user && (
                   <div className="flex items-center gap-2">
                     {user.user_metadata?.avatar_url && (
@@ -35,7 +51,7 @@ const Layout = () => {
                     </span>
                   </div>
                 )}
-                <Button variant="outline" size="sm" onClick={() => logout()}>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   <span className="hidden md:inline">Déconnexion</span>
                 </Button>

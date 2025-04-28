@@ -111,14 +111,39 @@ export const useAuthSession = () => {
 
   const logout = async () => {
     try {
+      // Vérifier d'abord si l'utilisateur est connecté
+      if (!session) {
+        console.log("Tentative de déconnexion sans session active");
+        // Nettoyer l'état local même s'il n'y a pas de session active
+        setSession(null);
+        setUser(null);
+        clearSettingsCache();
+        
+        // Informer l'utilisateur mais sans montrer d'erreur
+        toast.info("Vous êtes déjà déconnecté");
+        return;
+      }
+      
       const { error } = await supabase.auth.signOut();
+      
       if (error) throw error;
       
       // S'assurer que le cache est nettoyé
       clearSettingsCache();
     } catch (error: any) {
       console.error("Erreur de déconnexion:", error);
-      toast.error(`Échec de la déconnexion: ${error.message}`);
+      
+      // Message d'erreur plus convivial
+      const errorMessage = error.message === "Auth session missing!" 
+        ? "Votre session a expiré. Veuillez vous reconnecter."
+        : `Problème lors de la déconnexion: ${error.message}`;
+      
+      toast.error(`Échec de la déconnexion: ${errorMessage}`);
+      
+      // Nettoyer l'état local en cas d'erreur pour éviter des problèmes d'état incohérent
+      setSession(null);
+      setUser(null);
+      clearSettingsCache();
     }
   };
 

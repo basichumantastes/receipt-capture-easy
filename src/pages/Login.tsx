@@ -23,6 +23,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       await login();
+      // No need to redirect here, the useEffect will handle it
     } catch (error) {
       // Log errors for developers instead of showing them to users
       console.error("Login error:", error);
