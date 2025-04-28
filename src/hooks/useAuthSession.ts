@@ -1,15 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { clearSettingsCache } from "@/services/settingsService";
 
-// Scopes requis pour l'application
 const REQUIRED_SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/drive.readonly'
 ];
+
+// Key for storing test tokens
+const TEST_TOKEN_KEY = 'test_google_token';
 
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -143,8 +144,7 @@ export const useAuthSession = () => {
     }
   };
 
-  // Nouvelle fonction pour simuler la connexion (uniquement pour le développement)
-  const simulateLogin = (email: string) => {
+  const simulateLogin = (email: string, googleToken?: string) => {
     const fakeUser: User = {
       id: 'simulated-user-id',
       email: email,
@@ -154,6 +154,13 @@ export const useAuthSession = () => {
       created_at: new Date().toISOString(),
     };
     
+    // If a Google token is provided, store it for later use
+    const provider_token = googleToken || localStorage.getItem(TEST_TOKEN_KEY) || 'fake-provider-token';
+    
+    if (googleToken) {
+      localStorage.setItem(TEST_TOKEN_KEY, googleToken);
+    }
+    
     const fakeSession: Session = {
       access_token: 'fake-access-token',
       refresh_token: 'fake-refresh-token',
@@ -161,14 +168,13 @@ export const useAuthSession = () => {
       expires_at: Math.floor(Date.now() / 1000) + 3600,
       token_type: 'bearer',
       user: fakeUser,
-      provider_token: 'fake-provider-token',
+      provider_token: provider_token,
       provider_refresh_token: 'fake-provider-refresh-token'
     };
     
-    // On définit manuellement les valeurs
     setUser(fakeUser);
     setSession(fakeSession);
-    setHasRequiredScopes(true);
+    setHasRequiredScopes(!!provider_token && provider_token !== 'fake-provider-token');
     
     toast.success(`Session de test simulée pour ${email}`);
   };

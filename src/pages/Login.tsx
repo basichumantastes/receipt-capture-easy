@@ -2,50 +2,42 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Info } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TestLoginForm } from "@/components/test-auth/TestLoginForm";
 
 const Login = () => {
-  const {
-    isAuthenticated,
-    login,
-    loading,
-    simulateLogin
-  } = useAuth();
-  
+  const { isAuthenticated, login, loading, simulateLogin } = useAuth();
   const [isViewer, setIsViewer] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get redirect path from query parameters
   const from = new URLSearchParams(location.search).get('from') || '/';
 
-  // Detect if we're in the viewer
   useEffect(() => {
     const isInViewer = window.location.hostname.includes('lovable.app') || 
                       window.location.hostname.includes('lovableproject.com');
     setIsViewer(isInViewer);
   }, []);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, {
-        replace: true
-      });
+      navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
   
   if (loading) {
-    return <div className="container max-w-md py-16 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-expense-blue" />
-      </div>;
+    return (
+      <div className="container max-w-md py-16 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
   
-  return <div className="container max-w-md py-16">
+  return (
+    <div className="container max-w-md py-16">
       <Card className="w-full">
         <CardHeader className="text-center">
           <CardTitle>Connexion</CardTitle>
@@ -63,20 +55,9 @@ const Login = () => {
               </TabsList>
 
               <TabsContent value="test" className="mt-4">
-                <Alert className="mb-4 bg-amber-50">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    Mode de test pour le développement. Simule une connexion sans redirection Google.
-                  </AlertDescription>
-                </Alert>
-                
-                <Button 
-                  onClick={() => simulateLogin('test.user@example.com')} 
-                  variant="default"
-                  className="w-full flex items-center gap-2"
-                >
-                  Simuler une connexion
-                </Button>
+                <TestLoginForm 
+                  onSubmit={(email, token) => simulateLogin(email, token)} 
+                />
               </TabsContent>
 
               <TabsContent value="prod" className="mt-4">
@@ -107,14 +88,9 @@ const Login = () => {
             </Button>
           )}
         </CardContent>
-        
-        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col gap-2">
-          <p>
-            
-          </p>
-        </CardFooter>
       </Card>
-    </div>;
+    </div>
+  );
 };
 
 export default Login;
