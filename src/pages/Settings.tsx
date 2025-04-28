@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNotify } from "@/hooks/useNotify";
-import { useError } from "@/hooks/useError";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthError } from "@/hooks/useAuthError";
 import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSheetsConfig";
 import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,7 +14,7 @@ const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   const notify = useNotify();
-  const handleError = useError();
+  const handleError = useAuthError();
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

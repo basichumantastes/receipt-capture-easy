@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotify } from "@/hooks/useNotify";
-import { useError } from "@/hooks/useError";
+import { useAuthError } from "@/hooks/useAuthError";
 import ManualInputForm from "@/components/ManualInputForm";
 import CameraView from "@/components/capture/CameraView";
 
@@ -11,7 +11,7 @@ const Submit = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const notify = useNotify();
-  const handleError = useError();
+  const handleError = useAuthError();
   const [showManualInput, setShowManualInput] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
