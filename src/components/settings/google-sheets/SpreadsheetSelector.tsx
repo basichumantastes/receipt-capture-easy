@@ -16,32 +16,36 @@ import {
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCcw, Search, AlertCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SpreadsheetInfo } from "@/services/googleSheetsService";
+import { SpreadsheetInfo, useSpreadsheetsQuery } from "@/hooks/useSpreadsheetsQuery";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { queryClient } from '@/lib/queryClient';
 
 interface SpreadsheetSelectorProps {
-  spreadsheets: SpreadsheetInfo[];
-  isLoading: boolean;
   onSelect: (id: string, name: string) => void;
-  onRefresh: () => void;
   selectedId?: string;
 }
 
 export const SpreadsheetSelector = ({
-  spreadsheets,
-  isLoading,
   onSelect,
-  onRefresh,
   selectedId
 }: SpreadsheetSelectorProps) => {
   const [open, setOpen] = React.useState(false);
   const { session, hasRequiredScopes, login } = useAuth();
   
+  // Use React Query to fetch spreadsheets
+  const { data: spreadsheets = [], isLoading, refetch } = useSpreadsheetsQuery(session);
+  
   // Check if Google token is available
   const googleToken = session?.provider_token;
   const hasGoogleToken = !!googleToken;
+
+  // Handler to refresh spreadsheets list
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['spreadsheets'] });
+    refetch();
+  };
 
   return (
     <div className="flex gap-2 items-center">
@@ -187,7 +191,7 @@ export const SpreadsheetSelector = ({
         variant="outline" 
         type="button"
         className="w-10 p-0"
-        onClick={onRefresh}
+        onClick={handleRefresh}
         disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
         title="Rafraîchir la liste"
       >

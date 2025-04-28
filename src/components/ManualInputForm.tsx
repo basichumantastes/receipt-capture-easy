@@ -1,155 +1,76 @@
+import React, { useEffect, useState } from 'react';
+import { FormAmount } from './manual-input/FormAmount';
+import { FormMerchant } from './manual-input/FormMerchant';
+import { FormCategory } from './manual-input/FormCategory';
+import { FormDatePicker } from './manual-input/FormDatePicker';
+import { FormReason } from './manual-input/FormReason';
+import { Button } from './ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { ExpenseData } from '@/hooks/useExpenseMutation';
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Camera, SendHorizonal } from "lucide-react";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { FormDatePicker } from "./manual-input/FormDatePicker";
-import { FormMerchant } from "./manual-input/FormMerchant";
-import { FormAmount } from "./manual-input/FormAmount";
-import { FormCategory } from "./manual-input/FormCategory";
-import { FormReason } from "./manual-input/FormReason";
-import { useAuth } from "@/contexts/AuthContext";
-import { ExpenseData, submitExpense } from "@/services/expenseService";
-
-interface ManualInputFormProps {
-  capturedImage: string | null;
+interface Props {
+  capturedImage?: string | null;
+  onSubmit: (expenseData: ExpenseData) => void;
 }
 
-const ManualInputForm = ({ capturedImage }: ManualInputFormProps) => {
-  const { user, session } = useAuth();
-  const [loading, setLoading] = useState(false);
+const ManualInputForm = ({ capturedImage, onSubmit }: Props) => {
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [formData, setFormData] = useState<ExpenseData>({
-    date: format(new Date(), "yyyy-MM-dd"),
-    commercant: "",
-    montant_ttc: 0,
-    categorie: "Restaurant",
-    motif: "",
-  });
+  const [commercant, setCommercant] = useState('');
+  const [montant, setMontant] = useState('');
+  const [categorie, setCategorie] = useState('');
+  const [motif, setMotif] = useState('');
 
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setDate(date);
-      setFormData({
-        ...formData,
-        date: format(date, "yyyy-MM-dd"),
-      });
+  useEffect(() => {
+    if (!session) {
+      navigate('/login?from=/submit');
     }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === "montant_ttc" ? parseFloat(value) : value,
-    });
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setFormData({
-      ...formData,
-      categorie: value,
-    });
-  };
+  }, [session, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    if (!formData.commercant || formData.montant_ttc <= 0) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-    
-    setLoading(true);
+    const expenseData: ExpenseData = {
+      date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      commercant,
+      montant_ttc: parseFloat(montant.replace(',', '.')),
+      categorie,
+      motif
+    };
     
     try {
-      const result = await submitExpense(formData, session);
-      
-      if (!result.success) {
-        throw result.error || new Error("Failed to submit expense");
-      }
-      
-      toast.success("Dépense soumise avec succès !");
-      
-      // Reset form
-      setFormData({
-        date: format(new Date(), "yyyy-MM-dd"),
-        commercant: "",
-        montant_ttc: 0,
-        categorie: "Restaurant",
-        motif: "",
-      });
-      setDate(new Date());
+      onSubmit(expenseData);
+      navigate('/');
     } catch (error) {
-      console.error("Error submitting expense:", error);
-      toast.error(`Erreur lors de la soumission de la dépense: ${error.message}`);
+      console.error('Error submitting expense:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
-
-  const handleRetakePicture = () => {
-    window.location.reload();
   };
 
   return (
-    <div className="container max-w-lg py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>Détails de la note de frais</CardTitle>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            {capturedImage && (
-              <div className="relative">
-                <img 
-                  src={capturedImage} 
-                  alt="Reçu capturé" 
-                  className="w-full rounded-lg mb-4"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleRetakePicture}
-                  className="absolute top-2 right-2 gap-2"
-                >
-                  <Camera className="h-4 w-4" />
-                  Reprendre
-                </Button>
-              </div>
-            )}
-            
-            <FormDatePicker date={date} onDateChange={handleDateChange} />
-            <FormMerchant value={formData.commercant} onChange={handleChange} />
-            <FormAmount value={formData.montant_ttc} onChange={handleChange} />
-            <FormCategory value={formData.categorie} onValueChange={handleCategoryChange} />
-            <FormReason value={formData.motif} onChange={handleChange} />
-          </CardContent>
-          <CardFooter>
-            <Button 
-              type="submit"
-              className="w-full gap-2"
-              disabled={loading || !session?.access_token}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Envoi en cours...
-                </>
-              ) : (
-                <>
-                  <SendHorizonal className="h-4 w-4" />
-                  Soumettre la dépense
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+    <div className="container max-w-md mx-auto mt-5">
+      {capturedImage && (
+        <div className="mb-4">
+          <img src={capturedImage} alt="Captured" className="w-full rounded-md" />
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormDatePicker date={date} setDate={setDate} />
+        <FormMerchant commercant={commercant} setCommercant={setCommercant} />
+        <FormAmount montant={montant} setMontant={setMontant} />
+        <FormCategory categorie={categorie} setCategorie={setCategorie} />
+        <FormReason motif={motif} setMotif={setMotif} />
+        <div>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Envoi en cours...' : 'Envoyer'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNotify } from "@/hooks/useNotify";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuthError } from "@/hooks/useAuthError";
 import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSheetsConfig";
-import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
+import { useSettingsQuery, useSaveSettingsMutation, Settings } from "@/hooks/useSettingsQuery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 
@@ -14,67 +13,23 @@ const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   const notify = useNotify();
-  const handleError = useAuthError();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
-  // Default values that will be updated if we have stored settings
-  const [defaultValues, setDefaultValues] = useState<Partial<Settings>>({
-    spreadsheetId: "",
-    sheetName: "Dépenses",
-  });
+  // Use React Query hooks
+  const { data: settings, isLoading, error: fetchError } = useSettingsQuery(session);
+  const { mutate: saveSettings, isPending: isSaving } = useSaveSettingsMutation(session);
   
-  // Fetch existing settings
-  useEffect(() => {
-    const getSettings = async () => {
-      if (!isAuthenticated) {
-        setIsLoading(false);
-        return;
-      }
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const existingSettings = await fetchSettings(session);
-        
-        if (existingSettings) {
-          console.log("Loaded existing settings:", existingSettings);
-          setDefaultValues(existingSettings);
-        }
-      } catch (err) {
-        console.error("Failed to fetch settings:", err);
-        setError("Impossible de récupérer les paramètres existants");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    getSettings();
-  }, [isAuthenticated, session]);
+  // Error state for form specific errors (not fetch errors)
+  const [formError, setFormError] = useState<string | null>(null);
 
-const onSubmit = async (data: Settings) => {
-    setIsSaving(true);
-    setError(null);
-    
-    try {
-      const result = await saveSettings(data, session);
-      
-      if (!result.success) {
-        throw result.error || new Error("Erreur inconnue");
-      }
-      
-      notify.success("Paramètres sauvegardés", {
-        description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
-      });
-    } catch (error: any) {
-      console.error("Erreur lors de la sauvegarde des paramètres:", error);
-      handleError(error as Error, "Erreur lors de la sauvegarde des paramètres");
-      setError(error.message || "Une erreur s'est produite lors de la sauvegarde des paramètres");
-    } finally {
-      setIsSaving(false);
-    }
+  // Default values that will be updated from settings
+  const defaultValues = {
+    spreadsheetId: settings?.spreadsheetId || "",
+    sheetName: settings?.sheetName || "Dépenses",
+  };
+
+  const onSubmit = async (data: Settings) => {
+    setFormError(null);
+    saveSettings(data);
   };
 
   if (!isAuthenticated) {
@@ -95,11 +50,11 @@ const onSubmit = async (data: Settings) => {
     <div className="container max-w-5xl py-12">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Paramètres</h1>
       
-      {error && (
+      {(fetchError || formError) && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erreur</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{fetchError instanceof Error ? fetchError.message : formError}</AlertDescription>
         </Alert>
       )}
       

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FileSpreadsheet, AlertCircle } from "lucide-react";
 import { 
   Card, 
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { SpreadsheetInfo, listSpreadsheets } from "@/services/googleSheetsService";
+import { useSpreadsheetsQuery } from "@/hooks/useSpreadsheetsQuery";
 import { GoogleSheetsForm, SettingsFormValues } from "./GoogleSheetsForm";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
 
@@ -23,40 +23,8 @@ interface GoogleSheetsConfigProps {
 
 export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: GoogleSheetsConfigProps) => {
   const { session } = useAuth();
-  const [spreadsheets, setSpreadsheets] = useState<SpreadsheetInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const { data: spreadsheets = [], isLoading, error: loadError } = useSpreadsheetsQuery(session);
   const [selectedSpreadsheetId, setSelectedSpreadsheetId] = useState<string | undefined>();
-  
-  const loadSpreadsheets = async () => {
-    if (!session) {
-      setLoadError("Vous devez être connecté pour charger vos Google Sheets");
-      return;
-    }
-    
-    setIsLoading(true);
-    setLoadError(null);
-    
-    try {
-      const sheetsList = await listSpreadsheets(session);
-      if (sheetsList) {
-        setSpreadsheets(sheetsList);
-        
-        if (sheetsList.length === 0) {
-          setLoadError("Aucun Google Sheets trouvé dans votre compte. Assurez-vous d'avoir créé au moins un fichier Google Sheets accessible.");
-        }
-      }
-    } catch (error: any) {
-      console.error("Error loading spreadsheets:", error);
-      setLoadError(`Erreur lors du chargement des Google Sheets: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    loadSpreadsheets();
-  }, [session]);
 
   const handleSelectSpreadsheet = (spreadsheetId: string) => {
     setSelectedSpreadsheetId(spreadsheetId);
@@ -78,7 +46,9 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
           <Alert variant="default" className="mb-6 bg-orange-50 border-orange-200">
             <AlertCircle className="h-4 w-4 text-orange-800" />
             <AlertTitle>Attention</AlertTitle>
-            <AlertDescription className="text-orange-800">{loadError}</AlertDescription>
+            <AlertDescription className="text-orange-800">
+              {loadError instanceof Error ? loadError.message : "Erreur lors du chargement des données"}
+            </AlertDescription>
           </Alert>
         )}
         
@@ -101,10 +71,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
             )}
           </div>
           <SpreadsheetSelector
-            spreadsheets={spreadsheets}
-            isLoading={isLoading}
             onSelect={handleSelectSpreadsheet}
-            onRefresh={loadSpreadsheets}
             selectedId={selectedSpreadsheetId}
           />
         </div>

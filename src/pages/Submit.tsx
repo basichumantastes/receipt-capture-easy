@@ -3,18 +3,20 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotify } from "@/hooks/useNotify";
-import { useAuthError } from "@/hooks/useAuthError";
 import ManualInputForm from "@/components/ManualInputForm";
 import CameraView from "@/components/capture/CameraView";
+import { useSubmitExpenseMutation } from "@/hooks/useExpenseMutation";
 
 const Submit = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   const notify = useNotify();
-  const handleError = useAuthError();
   const [showManualInput, setShowManualInput] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  
+  // Use React Query for submitting expenses
+  const { mutate: submitExpense } = useSubmitExpenseMutation(session);
 
   // Redirect if not authenticated
   React.useEffect(() => {
@@ -35,7 +37,7 @@ const Submit = () => {
       setShowManualInput(true);
     } catch (error) {
       console.error("Error analyzing receipt:", error);
-      handleError(error as Error, "Erreur lors de l'analyse du reçu");
+      notify.error(error instanceof Error ? error.message : "Erreur lors de l'analyse du reçu");
       setAnalyzing(false);
     }
   };
@@ -52,7 +54,7 @@ const Submit = () => {
           onManualInputClick={() => setShowManualInput(true)}
         />
       ) : (
-        <ManualInputForm capturedImage={capturedImage} />
+        <ManualInputForm capturedImage={capturedImage} onSubmit={submitExpense} />
       )}
     </>
   );
