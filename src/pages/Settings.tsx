@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,7 @@ const SettingsPage = () => {
     getSettings();
   }, [isAuthenticated, session]);
 
-  const onSubmit = async (data: Settings) => {
+const onSubmit = async (data: Settings) => {
     setIsSaving(true);
     setError(null);
     
@@ -66,7 +65,7 @@ const SettingsPage = () => {
       }
       
       notify.success("Paramètres sauvegardés", {
-        description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
+        message: "Vos paramètres Google Sheets ont été mis à jour avec succès."
       });
     } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);

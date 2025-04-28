@@ -1,7 +1,6 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/form/FormField";
 
 interface FormMerchantProps {
   value: string;
@@ -10,16 +9,13 @@ interface FormMerchantProps {
 
 export const FormMerchant = ({ value, onChange }: FormMerchantProps) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="commercant">Commerçant</Label>
-      <Input
-        id="commercant"
-        name="commercant"
-        value={value}
-        onChange={onChange}
-        placeholder="Nom du commerçant"
-        required
-      />
-    </div>
+    <FormField
+      label="Commerçant"
+      name="commercant"
+      value={value}
+      onChange={onChange}
+      placeholder="Nom du commerçant"
+      required
+    />
   );
 };
