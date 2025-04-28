@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSh
 import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
