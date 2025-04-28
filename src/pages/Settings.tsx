@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -8,65 +8,62 @@ import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSh
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface Settings {
-  spreadsheetId?: string;
-  sheetName?: string;
-}
+import { useApi } from "@/hooks/useApi";
+import { Settings } from "@/types/settings";
 
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const dataFetchedRef = useRef(false);
+  const { useApiQuery, useApiMutation } = useApi();
   
-  // Default values that will be updated if we have stored settings
-  const [defaultValues, setDefaultValues] = useState<Partial<Settings>>({
+  // Charger les paramètres avec React Query
+  const { 
+    data: settings, 
+    isLoading,
+    error: settingsError
+  } = useApiQuery<Settings>(
+    "settings/get",
+    ["settings"],
+    { 
+      queryOptions: {
+        enabled: isAuthenticated,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      },
+      mockDelay: 800
+    }
+  );
+  
+  // Mutation pour sauvegarder les paramètres
+  const { 
+    mutate: saveSettings,
+    isPending: isSaving,
+    error: saveError
+  } = useApiMutation<{ success: boolean }, Settings>(
+    "settings/save",
+    {
+      method: "POST",
+      mutationOptions: {
+        onSuccess: () => {
+          toast("Paramètres sauvegardés", {
+            description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
+          });
+        }
+      },
+      mockDelay: 800
+    }
+  );
+  
+  // Valeurs par défaut
+  const defaultValues: Settings = settings || {
     spreadsheetId: "",
     sheetName: "Dépenses",
-  });
-  
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setIsLoading(false);
-      return;
-    }
-    
-    // Simulate fetching settings with a timeout
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      dataFetchedRef.current = true;
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [isAuthenticated]);
-
-  const onSubmit = async (data: Settings) => {
-    setIsSaving(true);
-    setError(null);
-    
-    try {
-      // Simulate saving settings
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update defaultValues
-      setDefaultValues(data);
-      
-      toast("Paramètres sauvegardés", {
-        description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
-      });
-    } catch (error: any) {
-      console.error("Erreur lors de la sauvegarde des paramètres:", error);
-      
-      setError("Une erreur s'est produite lors de la sauvegarde des paramètres");
-      
-      toast.error("Une erreur s'est produite lors de la sauvegarde des paramètres");
-    } finally {
-      setIsSaving(false);
-    }
   };
+  
+  const onSubmit = async (data: Settings) => {
+    saveSettings(data);
+  };
+
+  const error = settingsError || saveError;
 
   if (!isAuthenticated) {
     return (
@@ -93,7 +90,9 @@ const SettingsPage = () => {
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erreur</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Une erreur est survenue lors du chargement des paramètres"}
+          </AlertDescription>
         </Alert>
       )}
       
@@ -131,3 +130,4 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
+

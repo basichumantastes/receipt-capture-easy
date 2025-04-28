@@ -5,17 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Settings } from "@/services/settingsService";
-import { 
-  listSpreadsheets, 
-  SpreadsheetInfo, 
-  checkGoogleApiStatus, 
-  GoogleApiStatus,
-  listWorksheets,
-  WorksheetInfo 
-} from "@/services/googleSheetsService";
+import { Settings } from "@/types/settings";
+import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/types/googleSheets";
 import { SelectedSpreadsheet } from "./SelectedSpreadsheet";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
+import { useApi } from "@/hooks/useApi";
+import { toast } from "sonner";
 
 interface GoogleSheetsConfigProps {
   defaultValues: Partial<Settings>;
@@ -25,55 +20,79 @@ interface GoogleSheetsConfigProps {
 
 export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: GoogleSheetsConfigProps) => {
   const { session } = useAuth();
-  const [spreadsheets, setSpreadsheets] = useState<SpreadsheetInfo[]>([]);
-  const [worksheets, setWorksheets] = useState<WorksheetInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { useApiQuery, useApiMutation } = useApi();
   const [isLoadingWorksheets, setIsLoadingWorksheets] = useState(false);
-  const [apiStatus, setApiStatus] = useState<GoogleApiStatus>(GoogleApiStatus.READY);
   
-  const getSpreadsheets = async () => {
-    if (!session) return;
-    
-    setIsLoading(true);
-    
-    try {
-      const status = await checkGoogleApiStatus(session);
-      setApiStatus(status);
-      
-      if (status === GoogleApiStatus.READY) {
-        const sheets = await listSpreadsheets(session);
-        if (sheets) {
-          setSpreadsheets(sheets);
-        }
+  // Utilisation de React Query pour charger le statut de l'API Google
+  const { 
+    data: apiStatus = GoogleApiStatus.READY,
+    isLoading: isLoadingStatus 
+  } = useApiQuery<GoogleApiStatus>(
+    "google/status",
+    ["googleApiStatus"],
+    { 
+      queryOptions: {
+        enabled: !!session,
+        staleTime: 5 * 60 * 1000, // 5 minutes
       }
+    }
+  );
+  
+  // Utilisation de React Query pour charger la liste des spreadsheets
+  const { 
+    data: spreadsheets = [], 
+    isLoading: isLoadingSpreadsheets,
+    refetch: refetchSpreadsheets
+  } = useApiQuery<SpreadsheetInfo[]>(
+    "sheets/list", 
+    ["spreadsheets"], 
+    {
+      queryOptions: {
+        enabled: !!session && apiStatus === GoogleApiStatus.READY,
+        staleTime: 2 * 60 * 1000, // 2 minutes
+      },
+      mockDelay: 800
+    }
+  );
+  
+  // Utilisation de React Query pour charger les worksheets
+  const { 
+    data: worksheets = [], 
+    refetch: refetchWorksheets 
+  } = useApiQuery<WorksheetInfo[]>(
+    "sheets/tabs", 
+    ["worksheets", defaultValues.spreadsheetId || ""], 
+    {
+      queryOptions: {
+        enabled: !!session && !!defaultValues.spreadsheetId,
+        staleTime: 2 * 60 * 1000, // 2 minutes
+      },
+      mockDelay: 500
+    }
+  );
+  
+  // Fonction pour rafraîchir les spreadsheets
+  const getSpreadsheets = async () => {
+    try {
+      await refetchSpreadsheets();
     } catch (error) {
-      console.error("Error fetching spreadsheets:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Error refetching spreadsheets:", error);
     }
   };
   
+  // Fonction pour charger les worksheets d'un spreadsheet
   const getWorksheets = async (spreadsheetId: string) => {
     if (!session || !spreadsheetId) return;
     
     setIsLoadingWorksheets(true);
-    
     try {
-      const sheets = await listWorksheets(session, spreadsheetId);
-      if (sheets) {
-        setWorksheets(sheets);
-      }
+      await refetchWorksheets();
     } catch (error) {
       console.error("Error fetching worksheets:", error);
     } finally {
       setIsLoadingWorksheets(false);
     }
   };
-  
-  // Charger les spreadsheets au chargement
-  useEffect(() => {
-    getSpreadsheets();
-  }, [session]);
   
   // Charger les worksheets quand le spreadsheetId change
   useEffect(() => {
@@ -100,6 +119,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
   };
 
   const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
+  const isLoading = isLoadingStatus || isLoadingSpreadsheets;
 
   // Shared classes for consistent visual styling
   const labelClass = "font-medium";
@@ -159,3 +179,4 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     </Card>
   );
 };
+
