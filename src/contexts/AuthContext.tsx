@@ -11,7 +11,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   hasRequiredScopes: boolean;
-  simulateLogin: (email: string) => void; // Nouvelle fonction pour simuler la connexion
+  simulateLogin: (email: string, token?: string) => void; // Updated to accept token parameter
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   hasRequiredScopes: false,
-  simulateLogin: () => {} // Valeur par défaut
+  simulateLogin: () => {} // Default value
 });
 
 export const useAuth = () => useContext(AuthContext);
