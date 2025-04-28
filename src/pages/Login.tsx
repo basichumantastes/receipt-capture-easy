@@ -15,7 +15,6 @@ const Login = () => {
   
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("User authenticated, redirecting to:", from);
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
@@ -23,10 +22,10 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       await login();
-      // No need to redirect here, the useEffect will handle it
+      // La redirection sera gérée par l'useEffect
     } catch (error) {
-      // Log errors for developers instead of showing them to users
       console.error("Login error:", error);
+      // Les erreurs sont déjà gérées dans le hook useAuthSession
     }
   };
 

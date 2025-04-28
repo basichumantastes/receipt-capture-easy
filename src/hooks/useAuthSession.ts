@@ -18,23 +18,17 @@ export const useAuthSession = () => {
   const [hasRequiredScopes, setHasRequiredScopes] = useState<boolean>(false);
   const isAuthenticated = !!user;
 
-  // Vérifier si le token a les scopes nécessaires (simplification)
+  // Vérifier si le token a les scopes nécessaires
   const checkScopes = (currentSession: Session | null) => {
     const hasToken = !!currentSession?.provider_token;
-    console.log("Provider token présent:", hasToken);
     setHasRequiredScopes(hasToken);
     return hasToken;
   };
 
   useEffect(() => {
-    console.log("Setting up auth state listener");
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("Auth state changed:", event, currentSession?.user?.email);
-        console.log("Provider token available:", !!currentSession?.provider_token);
-        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -47,9 +41,7 @@ export const useAuthSession = () => {
         }
         
         if (event === 'SIGNED_OUT') {
-          // Nettoyer le cache lors de la déconnexion
           clearSettingsCache();
-          toast.info("Déconnecté");
           setHasRequiredScopes(false);
         }
       }
@@ -57,9 +49,6 @@ export const useAuthSession = () => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Initial session check:", currentSession?.user?.email || "No session");
-      console.log("Provider token available:", !!currentSession?.provider_token);
-      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -71,7 +60,6 @@ export const useAuthSession = () => {
     });
 
     return () => {
-      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -84,16 +72,11 @@ export const useAuthSession = () => {
       
       const redirectUrl = `${window.location.origin}/login`;
       
-      console.log("Redirecting to:", redirectUrl);
-      console.log("Requesting scopes:", REQUIRED_SCOPES.join(' '));
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          // Demander explicitement les autorisations nécessaires
           scopes: REQUIRED_SCOPES.join(' '),
-          // Forcer la demande de consentement à chaque fois pour s'assurer que les scopes sont bien demandés
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -111,16 +94,11 @@ export const useAuthSession = () => {
 
   const logout = async () => {
     try {
-      // Vérifier d'abord si l'utilisateur est connecté
+      // Ne pas afficher d'erreur si l'utilisateur n'est pas connecté
       if (!session) {
-        console.log("Tentative de déconnexion sans session active");
-        // Nettoyer l'état local même s'il n'y a pas de session active
         setSession(null);
         setUser(null);
         clearSettingsCache();
-        
-        // Informer l'utilisateur mais sans montrer d'erreur
-        toast.info("Vous êtes déjà déconnecté");
         return;
       }
       
@@ -133,14 +111,7 @@ export const useAuthSession = () => {
     } catch (error: any) {
       console.error("Erreur de déconnexion:", error);
       
-      // Message d'erreur plus convivial
-      const errorMessage = error.message === "Auth session missing!" 
-        ? "Votre session a expiré. Veuillez vous reconnecter."
-        : `Problème lors de la déconnexion: ${error.message}`;
-      
-      toast.error(`Échec de la déconnexion: ${errorMessage}`);
-      
-      // Nettoyer l'état local en cas d'erreur pour éviter des problèmes d'état incohérent
+      // Nettoyer l'état local en cas d'erreur
       setSession(null);
       setUser(null);
       clearSettingsCache();

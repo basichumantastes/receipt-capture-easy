@@ -11,7 +11,7 @@ const Layout = () => {
 
   const handleLogout = async () => {
     await logout();
-    // Rediriger explicitement vers la page d'accueil après déconnexion
+    // Rediriger vers la page d'accueil après déconnexion
     navigate("/");
   };
 
@@ -69,4 +69,3 @@ const Layout = () => {
 };
 
 export default Layout;
-
