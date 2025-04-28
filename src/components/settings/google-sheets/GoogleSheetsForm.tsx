@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,10 +14,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Table2 } from "lucide-react";
+import { useError } from "@/hooks/useError";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const settingsFormSchema = z.object({
-  spreadsheetId: z.string().min(1, "Veuillez saisir l'ID du Google Sheets"),
-  sheetName: z.string().min(1, "Veuillez saisir le nom de la feuille"),
+  spreadsheetId: z
+    .string()
+    .min(1, "Veuillez saisir l'ID du Google Sheets")
+    .regex(/^[a-zA-Z0-9-_]+$/, "L'ID du Google Sheets n'est pas valide"),
+  sheetName: z
+    .string()
+    .min(1, "Veuillez saisir le nom de la feuille")
+    .max(100, "Le nom de la feuille ne doit pas dépasser 100 caractères"),
 });
 
 export type SettingsFormValues = z.infer<typeof settingsFormSchema>;
@@ -31,6 +38,7 @@ interface GoogleSheetsFormProps {
 }
 
 export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadsheetId }: GoogleSheetsFormProps) => {
+  const handleError = useError();
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues,
@@ -45,13 +53,28 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
 
   React.useEffect(() => {
     if (spreadsheetId) {
-      form.setValue("spreadsheetId", spreadsheetId, { shouldValidate: true });
+      form.setValue("spreadsheetId", spreadsheetId, { 
+        shouldValidate: true,
+        shouldDirty: true
+      });
     }
   }, [spreadsheetId, form]);
 
+  const handleSubmit = async (data: SettingsFormValues) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      handleError(error as Error, {
+        type: 'validation',
+        context: 'Validation des paramètres',
+        displayMode: 'alert'
+      });
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
@@ -60,7 +83,11 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
               <FormItem>
                 <FormLabel>ID du Google Sheets</FormLabel>
                 <FormControl>
-                  <Input placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" {...field} />
+                  <Input 
+                    placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" 
+                    {...field}
+                    className={form.formState.errors.spreadsheetId ? "border-destructive" : ""}
+                  />
                 </FormControl>
                 <FormDescription>
                   L'ID de votre feuille Google Sheets se trouve dans l'URL (entre "d/" et "/edit")
@@ -77,7 +104,11 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
               <FormItem>
                 <FormLabel>Nom de la feuille</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dépenses" {...field} />
+                  <Input 
+                    placeholder="Dépenses" 
+                    {...field}
+                    className={form.formState.errors.sheetName ? "border-destructive" : ""}
+                  />
                 </FormControl>
                 <FormDescription>
                   Le nom de l'onglet dans lequel écrire les données
@@ -94,16 +125,20 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
             Configuration des colonnes
           </h3>
           
-          <div className="p-4 bg-orange-50 border border-orange-200 rounded-md mb-6">
-            <p className="text-orange-800 text-sm">
-              L'application écrit actuellement dans des colonnes fixes (A à E) dans l'ordre suivant : Date, Commerçant, Montant TTC, Catégorie, Motif. 
-              Assurez-vous que votre feuille de calcul suit ce format.
-            </p>
-          </div>
+          <Alert>
+            <AlertDescription>
+              Les données sont écrites dans les colonnes A à E dans l'ordre suivant: 
+              Date, Commerçant, Montant TTC, Catégorie, Motif. 
+              Assurez-vous que votre feuille de calcul est configurée en conséquence.
+            </AlertDescription>
+          </Alert>
         </div>
         
         <div className="flex justify-end">
-          <Button type="submit" disabled={isSaving || !form.formState.isValid}>
+          <Button 
+            type="submit" 
+            disabled={isSaving || !form.formState.isValid || !form.formState.isDirty}
+          >
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

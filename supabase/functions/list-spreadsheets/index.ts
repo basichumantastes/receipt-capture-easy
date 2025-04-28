@@ -1,8 +1,9 @@
+// @ts-ignore
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { createHandler } from '../_shared/edge-utils.ts';
+import { createSupabaseClient } from "../_shared/supabaseClient.ts";
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHandler, createSupabaseClient } from "../_shared/edge-utils.ts";
-
-serve((req) => corsHandler(req, async () => {
+serve(createHandler(async (req) => {
   const authorization = req.headers.get('Authorization');
   const { supabase } = createSupabaseClient(authorization, 'list-spreadsheets');
   
@@ -107,4 +108,4 @@ serve((req) => corsHandler(req, async () => {
     console.error("API request error:", apiError.message);
     throw apiError;
   }
-}, 'list-spreadsheets'));
+}));

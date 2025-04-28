@@ -1,6 +1,6 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHandler, createSupabaseClient } from "../_shared/edge-utils.ts";
+import { serve } from "../_shared/deps.ts";
+import { createHandler } from '../_shared/edge-utils.ts';
+import { createSupabaseClient } from "../_shared/supabaseClient.ts";
 
 interface EnvVars {
   SPREADSHEET_ID?: string;
@@ -8,7 +8,7 @@ interface EnvVars {
   [key: string]: string | undefined;
 }
 
-serve((req) => corsHandler(req, async () => {
+serve(createHandler(async (req) => {
   const authorization = req.headers.get('Authorization');
   const { supabase } = createSupabaseClient(authorization, 'update-env-vars');
   
@@ -41,4 +41,4 @@ serve((req) => corsHandler(req, async () => {
   }), {
     headers: { 'Content-Type': 'application/json' },
   });
-}, 'update-env-vars'));
+}));

@@ -1,61 +1,67 @@
 
-import { createClient, SupabaseClient, User } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-
 export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
 
-export async function corsHandler(
-  request: Request,
-  handler: () => Promise<Response>,
-  logPrefix?: string
-): Promise<Response> {
-  const prefix = logPrefix ? `[${logPrefix}] ` : '';
-  
-  if (request.method === 'OPTIONS') {
-    console.log(prefix + "Handling CORS preflight request");
+export const getAuthToken = (req: Request): string | null => {
+  const authHeader = req.headers.get('Authorization');
+  return authHeader ? authHeader.replace('Bearer ', '') : null;
+};
+
+export const corsHandler = (req: Request, handler: () => Promise<Response>) => {
+  if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
-  
-  try {
-    const response = await handler();
-    const newHeaders = new Headers(response.headers);
+
+  return handler().then(response => {
+    // Add CORS headers to the response
+    const headers = new Headers(response.headers);
     Object.entries(corsHeaders).forEach(([key, value]) => {
-      newHeaders.set(key, value);
+      headers.set(key, value);
     });
     
     return new Response(response.body, {
       status: response.status,
-      headers: newHeaders,
+      headers,
     });
-  } catch (error) {
-    console.error(prefix + "Error in handler:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-}
+  });
+};
 
-export function createSupabaseClient(
-  authHeader: string | null,
-  logPrefix?: string
-): { supabase: SupabaseClient; user: User | null } {
-  const prefix = logPrefix ? `[${logPrefix}] ` : '';
-  
-  if (!authHeader) {
-    console.error(prefix + "Missing Authorization header");
-    throw new Error('Missing Authorization header');
-  }
-  
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-  
-  return {
-    supabase: createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    }),
-    user: null
+export const createHandler = (handler: (req: Request, token?: string) => Promise<Response>, requireAuth: boolean = false) => {
+  return async (req: Request) => {
+    return corsHandler(req, async () => {
+      // Handle health checks
+      if (req.url.endsWith('/_health')) {
+        return new Response(JSON.stringify({ status: 'ok' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        const token = getAuthToken(req) ?? undefined;
+        
+        // Check if authentication is required
+        if (requireAuth && !token) {
+          return new Response(JSON.stringify({ 
+            error: 'Missing authorization header' 
+          }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        return await handler(req, token);
+      } catch (error) {
+        console.error('Handler error:', error);
+        return new Response(JSON.stringify({ 
+          error: error instanceof Error ? error.message : 'Internal server error' 
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    });
   };
-}
+};

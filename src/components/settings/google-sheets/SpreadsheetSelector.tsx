@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Command,
@@ -16,11 +15,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCcw, Search, AlertCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SpreadsheetInfo, useSpreadsheetsQuery } from "@/hooks/useSpreadsheetsQuery";
+import { useSpreadsheetsQuery } from "@/hooks/useSpreadsheetsQuery";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { queryClient } from '@/lib/queryClient';
+import { useError } from '@/hooks/useError';
 
 interface SpreadsheetSelectorProps {
   onSelect: (id: string, name: string) => void;
@@ -33,6 +33,7 @@ export const SpreadsheetSelector = ({
 }: SpreadsheetSelectorProps) => {
   const [open, setOpen] = React.useState(false);
   const { session, hasRequiredScopes, login } = useAuth();
+  const handleError = useError();
   
   // Use React Query to fetch spreadsheets
   const { data: spreadsheets = [], isLoading, refetch } = useSpreadsheetsQuery(session);

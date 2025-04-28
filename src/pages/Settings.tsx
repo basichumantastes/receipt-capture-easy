@@ -1,25 +1,32 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useNotify } from "@/hooks/useNotify";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSheetsConfig";
 import { useSettingsQuery, useSaveSettingsMutation, Settings } from "@/hooks/useSettingsQuery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useError } from "@/hooks/useError";
 
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
-  const notify = useNotify();
+  const handleError = useError();
   
   // Use React Query hooks
   const { data: settings, isLoading, error: fetchError } = useSettingsQuery(session);
   const { mutate: saveSettings, isPending: isSaving } = useSaveSettingsMutation(session);
-  
-  // Error state for form specific errors (not fetch errors)
-  const [formError, setFormError] = useState<string | null>(null);
+
+  // Gérer les erreurs de chargement
+  React.useEffect(() => {
+    if (fetchError) {
+      handleError(fetchError as Error, {
+        type: 'api',
+        context: 'Chargement des paramètres',
+        displayMode: 'both'
+      });
+    }
+  }, [fetchError, handleError]);
 
   // Default values that will be updated from settings
   const defaultValues = {
@@ -28,8 +35,15 @@ const SettingsPage = () => {
   };
 
   const onSubmit = async (data: Settings) => {
-    setFormError(null);
-    saveSettings(data);
+    saveSettings(data, {
+      onError: (error) => {
+        handleError(error as Error, {
+          type: 'api',
+          context: 'Sauvegarde des paramètres',
+          displayMode: 'alert'
+        });
+      }
+    });
   };
 
   if (!isAuthenticated) {
@@ -50,11 +64,13 @@ const SettingsPage = () => {
     <div className="container max-w-5xl py-12">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Paramètres</h1>
       
-      {(fetchError || formError) && (
+      {fetchError && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erreur</AlertTitle>
-          <AlertDescription>{fetchError instanceof Error ? fetchError.message : formError}</AlertDescription>
+          <AlertDescription>
+            {(fetchError as Error).message}
+          </AlertDescription>
         </Alert>
       )}
       

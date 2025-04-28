@@ -1,6 +1,13 @@
+// @ts-ignore
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { createHandler } from '../_shared/edge-utils.ts';
+import { createSupabaseClient } from "../_shared/supabaseClient.ts";
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHandler, createSupabaseClient } from "../_shared/edge-utils.ts";
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
 
 interface ExpenseData {
   date: string;
@@ -12,8 +19,12 @@ interface ExpenseData {
   created_at: string;
 }
 
-serve((req) => corsHandler(req, async () => {
+serve(createHandler(async (req) => {
   const authorization = req.headers.get('Authorization');
+  if (!authorization) {
+    throw new Error('Missing authorization header');
+  }
+
   const { supabase } = createSupabaseClient(authorization, 'submit-expense');
   
   // Get user info from the session
@@ -40,8 +51,8 @@ serve((req) => corsHandler(req, async () => {
   }
   
   // Get the Google Sheets ID from environment variables
-  const SPREADSHEET_ID = Deno.env.get("SPREADSHEET_ID");
-  const SHEET_NAME = Deno.env.get("SHEET_NAME") || "Dépenses";
+  const SPREADSHEET_ID = Deno.env.get("SPREADSHEET_ID") ?? "";
+  const SHEET_NAME = Deno.env.get("SHEET_NAME") ?? "Dépenses";
   
   console.log("Using spreadsheet ID:", SPREADSHEET_ID);
   console.log("Using sheet name:", SHEET_NAME);
@@ -109,4 +120,4 @@ serve((req) => corsHandler(req, async () => {
     console.error("Google Sheets API fetch error:", apiError);
     throw new Error(`Google Sheets API error: ${apiError.message}`);
   }
-}, 'submit-expense'));
+}));

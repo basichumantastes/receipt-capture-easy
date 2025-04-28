@@ -1,7 +1,5 @@
-
 import { useAuthToken } from "./useAuthToken";
 import { useUserScopes } from "./useUserScopes";
-import { useAuthError } from "./useAuthError";
 
 export const useAuthSession = () => {
   const { 
@@ -14,7 +12,6 @@ export const useAuthSession = () => {
   } = useAuthToken();
 
   const { hasRequiredScopes } = useUserScopes(session);
-  const handleAuthError = useAuthError();
 
   return {
     isAuthenticated,
@@ -23,7 +20,6 @@ export const useAuthSession = () => {
     loading,
     login,
     logout,
-    hasRequiredScopes,
-    handleAuthError
+    hasRequiredScopes
   };
 };
