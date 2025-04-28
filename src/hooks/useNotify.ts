@@ -1,7 +1,7 @@
 
-import { toast, ToastProps } from "sonner";
+import { toast, ToasterProps } from "sonner";
 
-type NotifyOptions = Partial<ToastProps>;
+type NotifyOptions = Partial<ToasterProps>;
 
 export function useNotify() {
   const notify = {
