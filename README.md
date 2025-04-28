@@ -1,14 +1,21 @@
 
-# Receipt Capture for Google Sheets
+# Google Sheets Configuration App
 
-Une application simple pour connecter votre compte Google et sélectionner le Google Sheets à utiliser pour stocker vos dépenses.
+Une application simple permettant aux utilisateurs de se connecter via Google et de configurer leur Google Sheets pour des usages personnalisés.
 
-## Fonctionnalités
+## Fonctionnalités principales
 
-- Authentification Google OAuth
-- Accès à vos Google Spreadsheets
-- Sélection du spreadsheet et de l'onglet à utiliser
-- Sauvegarde des paramètres utilisateur dans Supabase
+1. **Authentification Google OAuth**
+   - Connexion sécurisée avec votre compte Google
+   - Gestion des permissions pour accès aux Google Sheets
+
+2. **Sélection de Google Spreadsheets**
+   - Visualisation de tous vos Google Spreadsheets
+   - Sélection du spreadsheet et de l'onglet spécifique à utiliser
+
+3. **Sauvegarde des paramètres utilisateur**
+   - Stockage sécurisé des préférences dans Supabase
+   - Conservation des configurations entre les sessions
 
 ## Configuration du projet
 
@@ -34,7 +41,11 @@ Une application simple pour connecter votre compte Google et sélectionner le Go
 
 1. Clonez ce dépôt
 2. Installez les dépendances: `npm install`
-3. Créez un fichier `.env.local` avec les variables nécessaires
+3. Créez un fichier `.env.local` avec les variables nécessaires:
+   ```
+   VITE_SUPABASE_URL=votre_url_supabase
+   VITE_SUPABASE_ANON_KEY=votre_clef_anon_supabase
+   ```
 
 ## Déploiement
 
@@ -48,25 +59,16 @@ Une application simple pour connecter votre compte Google et sélectionner le Go
 
 1. Connectez votre dépôt GitHub à Netlify
 2. Configurez les variables d'environnement
-3. Créez un fichier `netlify.toml`:
+3. Ajoutez la configuration de redirection:
    ```toml
-   [build]
-     publish = "dist"
-     command = "npm run build"
-   
    [[redirects]]
      from = "/*"
      to = "/index.html"
      status = 200
    ```
-4. Déployez l'application
-
-## Dépannage
-
-- **Problèmes d'authentification**: Vérifiez que votre Client ID est correct et que les origines autorisées sont bien configurées dans Google Cloud Console.
-- **Erreurs CORS**: Assurez-vous que les origines sont correctement configurées.
 
 ## Ressources utiles
 
 - [Documentation Google OAuth](https://developers.google.com/identity/protocols/oauth2)
 - [Documentation Google Sheets API](https://developers.google.com/sheets/api)
+- [Documentation Supabase](https://supabase.com/docs)
