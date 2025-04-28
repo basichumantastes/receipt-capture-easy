@@ -1,8 +1,19 @@
 
 import { toast } from "sonner";
-import type { ToastOptions } from "sonner";
 
-type NotifyOpts = Partial<ToastOptions>;
+// Use a more generic type since ToastOptions isn't exported
+type NotifyOpts = {
+  description?: React.ReactNode;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  duration?: number;
+  id?: string | number;
+  onDismiss?: () => void;
+  onAutoClose?: () => void;
+  cancel?: boolean;
+};
 
 export function useNotify() {
   const notify = {
