@@ -9,11 +9,16 @@ export interface Settings {
 
 // Cache des paramètres pour éviter des appels répétés
 let settingsCache: Settings | null = null;
+let lastFetchTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 
 export async function fetchSettings(session: Session | null): Promise<Settings | null> {
   try {
-    // Si nous avons des paramètres en cache et une session, retournons-les
-    if (settingsCache && session?.access_token) {
+    const now = Date.now();
+    
+    // Si nous avons des paramètres en cache, une session valide, et le cache n'a pas expiré
+    if (settingsCache && session?.access_token && (now - lastFetchTimestamp < CACHE_DURATION)) {
+      console.log("Using cached settings, cache age:", (now - lastFetchTimestamp) / 1000, "seconds");
       return settingsCache;
     }
 
@@ -41,6 +46,7 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
     if (userSettings?.settings) {
       const typedSettings = userSettings.settings as unknown as Settings;
       settingsCache = typedSettings;
+      lastFetchTimestamp = now;
       return typedSettings;
     }
     
@@ -81,6 +87,7 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
     
     // Mettre à jour le cache avec les nouvelles données
     settingsCache = data;
+    lastFetchTimestamp = Date.now();
     
     console.log("Settings saved successfully");
     return { success: true };
@@ -96,4 +103,5 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
 // Fonction pour réinitialiser le cache (utile lors de la déconnexion)
 export function clearSettingsCache() {
   settingsCache = null;
+  lastFetchTimestamp = 0;
 }

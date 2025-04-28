@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,6 +16,7 @@ import {
 } from "@/services/googleSheetsService";
 import { SelectedSpreadsheet } from "./SelectedSpreadsheet";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface GoogleSheetsConfigProps {
   defaultValues: Partial<Settings>;
@@ -30,6 +31,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingWorksheets, setIsLoadingWorksheets] = useState(false);
   const [apiStatus, setApiStatus] = useState<GoogleApiStatus>(GoogleApiStatus.NEEDS_AUTH);
+  const dataFetchedRef = useRef(false);
   
   const getSpreadsheets = useCallback(async () => {
     if (!session) return;
@@ -70,10 +72,15 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     }
   }, [session]);
   
+  // Utiliser useEffect avec ref pour éviter les doubles chargements
   useEffect(() => {
-    getSpreadsheets();
+    if (!dataFetchedRef.current) {
+      getSpreadsheets();
+      dataFetchedRef.current = true;
+    }
   }, [getSpreadsheets]);
   
+  // Charger les worksheets seulement quand l'ID du spreadsheet change
   useEffect(() => {
     if (defaultValues.spreadsheetId) {
       getWorksheets(defaultValues.spreadsheetId);
@@ -98,6 +105,9 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
   };
 
   const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
+
+  // Classes partagées pour assurer une cohérence visuelle
+  const labelClass = "font-medium"; // Toujours en gras, qu'on soit en chargement ou pas
 
   return (
     <Card>
@@ -137,6 +147,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
           onSelectWorksheet={handleSelectWorksheet}
           onRefresh={getSpreadsheets}
           apiStatus={apiStatus}
+          labelClass={labelClass}
         />
         
         {apiStatus === GoogleApiStatus.READY && spreadsheets.length === 0 && !isLoading && (
@@ -151,7 +162,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
         {isLoading && (
           <div className="flex items-center pt-2">
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            <span className="text-sm">Chargement des Google Sheets...</span>
+            <span className="text-sm font-medium">Chargement des Google Sheets...</span>
           </div>
         )}
       </CardContent>

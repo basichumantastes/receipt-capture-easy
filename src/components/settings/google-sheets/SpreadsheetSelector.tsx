@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Search } from "lucide-react";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/services/googleSheetsService";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SpreadsheetSelectorProps {
   defaultValues: {
@@ -20,6 +22,7 @@ interface SpreadsheetSelectorProps {
   onSelectWorksheet: (name: string) => void;
   onRefresh: () => void;
   apiStatus: GoogleApiStatus;
+  labelClass?: string;
 }
 
 export const SpreadsheetSelector = ({
@@ -32,6 +35,7 @@ export const SpreadsheetSelector = ({
   onSelectWorksheet,
   onRefresh,
   apiStatus,
+  labelClass = "font-medium"
 }: SpreadsheetSelectorProps) => {
   const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,7 +48,7 @@ export const SpreadsheetSelector = ({
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex justify-between items-center">
-        <label htmlFor="spreadsheet" className="font-medium">
+        <label htmlFor="spreadsheet" className={labelClass}>
           Sélectionner un Google Sheets
         </label>
         
@@ -123,7 +127,7 @@ export const SpreadsheetSelector = ({
       
       {selectedSpreadsheet && (
         <div className="flex justify-between items-center">
-          <label htmlFor="worksheet" className="font-medium">
+          <label htmlFor="worksheet" className={labelClass}>
             Sélectionner un onglet
           </label>
           <Select
@@ -148,7 +152,7 @@ export const SpreadsheetSelector = ({
       {isLoadingWorksheets && (
         <div className="flex items-center pt-2">
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          <span className="text-sm">Chargement des onglets...</span>
+          <span className="text-sm font-medium">Chargement des onglets...</span>
         </div>
       )}
     </div>
