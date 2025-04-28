@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,32 +5,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Loader2, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
 const Login = () => {
-  const { isAuthenticated, login, loading } = useAuth();
+  const {
+    isAuthenticated,
+    login,
+    loading
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Get redirect path from query parameters
   const from = new URLSearchParams(location.search).get('from') || '/';
-  
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      navigate(from, {
+        replace: true
+      });
     }
   }, [isAuthenticated, navigate, from]);
-
   if (loading) {
-    return (
-      <div className="container max-w-md py-16 flex items-center justify-center">
+    return <div className="container max-w-md py-16 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-expense-blue" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="container max-w-md py-16">
+  return <div className="container max-w-md py-16">
       <Card className="w-full">
         <CardHeader className="text-center">
           <CardTitle>Connexion</CardTitle>
@@ -41,26 +40,11 @@ const Login = () => {
         </CardHeader>
         
         <CardContent className="flex flex-col items-center gap-4">
-          <Alert className="bg-blue-50 border-blue-200 mb-4">
-            <Info className="h-4 w-4 text-blue-800" />
-            <AlertDescription className="text-blue-800">
-              Cette application demande l'accès à Google Sheets et à Google Drive (en lecture seule) 
-              pour fonctionner correctement. Veuillez autoriser ces accès lors de la connexion.
-            </AlertDescription>
-          </Alert>
           
-          <Alert variant="default" className="bg-amber-50 border-amber-200 mb-4">
-            <Info className="h-4 w-4 text-amber-800" />
-            <AlertDescription className="text-amber-800">
-              Vous serez redirigé vers Supabase (qayxeeuojrmhwrevyapn.supabase.co) pour l'authentification, 
-              puis vers Google pour autoriser l'accès. C'est normal et sécurisé.
-            </AlertDescription>
-          </Alert>
           
-          <Button 
-            onClick={login}
-            className="w-full flex items-center gap-2"
-          >
+          
+          
+          <Button onClick={login} className="w-full flex items-center gap-2">
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
               <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
                 <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
@@ -74,24 +58,12 @@ const Login = () => {
         </CardContent>
         
         <CardFooter className="text-center text-sm text-muted-foreground flex flex-col gap-2">
+          
           <p>
-            Si vous rencontrez des problèmes d'autorisation, veuillez essayer de 
-            révoquer l'accès à cette application dans votre compte Google et vous reconnecter.
-          </p>
-          <p>
-            <a 
-              href="https://myaccount.google.com/permissions" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-primary hover:underline"
-            >
-              Révoquer les accès dans Google
-            </a>
+            
           </p>
         </CardFooter>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Login;
