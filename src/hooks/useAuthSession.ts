@@ -143,6 +143,36 @@ export const useAuthSession = () => {
     }
   };
 
+  // Nouvelle fonction pour simuler la connexion (uniquement pour le développement)
+  const simulateLogin = (email: string) => {
+    const fakeUser: User = {
+      id: 'simulated-user-id',
+      email: email,
+      app_metadata: {},
+      user_metadata: { full_name: 'Test User', name: 'Test User' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+    
+    const fakeSession: Session = {
+      access_token: 'fake-access-token',
+      refresh_token: 'fake-refresh-token',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer',
+      user: fakeUser,
+      provider_token: 'fake-provider-token',
+      provider_refresh_token: 'fake-provider-refresh-token'
+    };
+    
+    // On définit manuellement les valeurs
+    setUser(fakeUser);
+    setSession(fakeSession);
+    setHasRequiredScopes(true);
+    
+    toast.success(`Session de test simulée pour ${email}`);
+  };
+
   return {
     isAuthenticated,
     user,
@@ -150,6 +180,7 @@ export const useAuthSession = () => {
     loading,
     login,
     logout,
-    hasRequiredScopes
+    hasRequiredScopes,
+    simulateLogin
   };
 };
