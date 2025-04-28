@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useNotify } from "@/hooks/useNotify";
+import { useError } from "@/hooks/useError";
 import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSheetsConfig";
 import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -11,6 +11,8 @@ import { AlertCircle, Loader2 } from "lucide-react";
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
+  const notify = useNotify();
+  const handleError = useError();
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,18 +63,13 @@ const SettingsPage = () => {
         throw result.error || new Error("Erreur inconnue");
       }
       
-      toast("Paramètres sauvegardés", {
+      notify.success("Paramètres sauvegardés", {
         description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
       });
     } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
-      
+      handleError(error as Error, "Erreur lors de la sauvegarde des paramètres");
       setError(error.message || "Une erreur s'est produite lors de la sauvegarde des paramètres");
-      
-      toast("Erreur", {
-        description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
-        style: { backgroundColor: 'hsl(var(--destructive))' }
-      });
     } finally {
       setIsSaving(false);
     }

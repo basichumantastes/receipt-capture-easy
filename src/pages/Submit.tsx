@@ -2,13 +2,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotify } from "@/hooks/useNotify";
+import { useError } from "@/hooks/useError";
 import ManualInputForm from "@/components/ManualInputForm";
 import CameraView from "@/components/capture/CameraView";
-import { toast } from "sonner";
 
 const Submit = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const notify = useNotify();
+  const handleError = useError();
   const [showManualInput, setShowManualInput] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -27,12 +30,12 @@ const Submit = () => {
     try {
       // TODO: Implement OCR and OpenAI analysis
       await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success("Analyse du reçu terminée");
+      notify.success("Analyse du reçu terminée");
       setAnalyzing(false);
       setShowManualInput(true);
     } catch (error) {
       console.error("Error analyzing receipt:", error);
-      toast.error("Erreur lors de l'analyse du reçu");
+      handleError(error as Error, "Erreur lors de l'analyse du reçu");
       setAnalyzing(false);
     }
   };
