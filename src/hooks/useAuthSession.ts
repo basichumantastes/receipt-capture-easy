@@ -10,8 +10,7 @@ export const useAuthSession = () => {
     session,
     loading,
     login,
-    logout,
-    simulateLogin
+    logout
   } = useAuthToken();
 
   const { hasRequiredScopes } = useUserScopes(session);
@@ -25,7 +24,6 @@ export const useAuthSession = () => {
     login,
     logout,
     hasRequiredScopes,
-    simulateLogin,
     handleAuthError
   };
 };

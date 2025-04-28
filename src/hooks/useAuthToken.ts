@@ -5,9 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { clearSettingsCache } from "@/services/settingsService";
 
-// Key for storing test tokens
-const TEST_TOKEN_KEY = 'test_google_token';
-
 export const useAuthToken = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -108,47 +105,12 @@ export const useAuthToken = () => {
     }
   };
 
-  const simulateLogin = (email: string, googleToken?: string) => {
-    const fakeUser: User = {
-      id: 'simulated-user-id',
-      email: email,
-      app_metadata: {},
-      user_metadata: { full_name: 'Test User', name: 'Test User' },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-    };
-    
-    // If a Google token is provided, store it for later use
-    const provider_token = googleToken || localStorage.getItem(TEST_TOKEN_KEY) || 'fake-provider-token';
-    
-    if (googleToken) {
-      localStorage.setItem(TEST_TOKEN_KEY, googleToken);
-    }
-    
-    const fakeSession: Session = {
-      access_token: 'fake-access-token',
-      refresh_token: 'fake-refresh-token',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      token_type: 'bearer',
-      user: fakeUser,
-      provider_token: provider_token,
-      provider_refresh_token: 'fake-provider-refresh-token'
-    };
-    
-    setUser(fakeUser);
-    setSession(fakeSession);
-    
-    toast.success(`Session de test simulée pour ${email}`);
-  };
-
   return {
     isAuthenticated,
     user,
     session,
     loading,
     login,
-    logout,
-    simulateLogin
+    logout
   };
 };
