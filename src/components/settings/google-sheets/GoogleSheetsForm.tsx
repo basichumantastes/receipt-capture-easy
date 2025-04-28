@@ -28,7 +28,7 @@ interface GoogleSheetsFormProps {
   onSubmit: (data: SettingsFormValues) => Promise<void>;
   isSaving: boolean;
   spreadsheetId?: string;
-  disabled?: boolean; // Added the missing disabled prop
+  disabled?: boolean;
 }
 
 export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadsheetId, disabled }: GoogleSheetsFormProps) => {

@@ -94,7 +94,6 @@ export const useAuthSession = () => {
 
   const logout = async () => {
     try {
-      // Ne pas afficher d'erreur si l'utilisateur n'est pas connecté
       if (!session) {
         setSession(null);
         setUser(null);
@@ -106,7 +105,6 @@ export const useAuthSession = () => {
       
       if (error) throw error;
       
-      // S'assurer que le cache est nettoyé
       clearSettingsCache();
     } catch (error: any) {
       console.error("Erreur de déconnexion:", error);

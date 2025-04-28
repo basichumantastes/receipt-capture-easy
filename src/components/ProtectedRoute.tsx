@@ -21,7 +21,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Redirection vers la page de connexion avec le chemin d'origine
     return <Navigate to={`/login?from=${encodeURIComponent(location.pathname)}`} replace />;
   }
 

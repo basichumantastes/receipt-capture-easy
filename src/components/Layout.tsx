@@ -3,7 +3,7 @@ import React from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ReceiptText, LogOut } from "lucide-react";
+import { ReceiptText, LogOut, Settings } from "lucide-react";
 
 const Layout = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -11,7 +11,6 @@ const Layout = () => {
 
   const handleLogout = async () => {
     await logout();
-    // Rediriger vers la page d'accueil après déconnexion
     navigate("/");
   };
 
@@ -41,6 +40,10 @@ const Layout = () => {
                     </span>
                   </div>
                 )}
+                <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  <span className="hidden md:inline">Paramètres</span>
+                </Button>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   <span className="hidden md:inline">Déconnexion</span>
@@ -61,7 +64,7 @@ const Layout = () => {
 
       <footer className="border-t py-4">
         <div className="container text-center text-sm text-muted-foreground">
-          Receipt Capture Easy &copy; {new Date().getFullYear()}
+          Receipt Capture &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>

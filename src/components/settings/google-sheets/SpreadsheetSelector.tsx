@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/services/googleSheetsService";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface SpreadsheetSelectorProps {
   defaultValues: {

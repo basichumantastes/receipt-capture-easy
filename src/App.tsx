@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Submit from "./pages/Submit";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
@@ -24,11 +23,6 @@ const App = () => (
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="login" element={<Login />} />
-              <Route path="submit" element={
-                <ProtectedRoute>
-                  <Submit />
-                </ProtectedRoute>
-              } />
               <Route path="settings" element={
                 <ProtectedRoute>
                   <SettingsPage />
