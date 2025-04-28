@@ -65,7 +65,7 @@ const onSubmit = async (data: Settings) => {
       }
       
       notify.success("Paramètres sauvegardés", {
-        message: "Vos paramètres Google Sheets ont été mis à jour avec succès."
+        description: "Vos paramètres Google Sheets ont été mis à jour avec succès."
       });
     } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
