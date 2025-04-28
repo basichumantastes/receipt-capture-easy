@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ExternalLink, LinkIcon } from "lucide-react";
-import { SpreadsheetInfo } from "@/services/googleSheetsService";
+import { SpreadsheetInfo } from "@/types/googleSheets";
 
 interface SelectedSpreadsheetProps {
   spreadsheet: SpreadsheetInfo;

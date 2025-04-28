@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/services/googleSheetsService";
+import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/types/googleSheets";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 

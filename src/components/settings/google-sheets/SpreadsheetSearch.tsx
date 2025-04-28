@@ -2,7 +2,7 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { GoogleApiStatus, SpreadsheetInfo } from "@/services/googleSheetsService";
+import { GoogleApiStatus, SpreadsheetInfo } from "@/types/googleSheets";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
