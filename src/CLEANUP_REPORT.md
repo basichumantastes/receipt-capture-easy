@@ -15,9 +15,18 @@ Ce rapport détaille les actions entreprises pour nettoyer en profondeur le code
 ### Services non essentiels
 - ✅ `src/services/expenseService.ts` - Service lié à la soumission des dépenses
 
+### Formulaires de saisie manuelle
+- ✅ `src/components/ManualInputForm.tsx` - Formulaire principal de saisie des dépenses
+- ✅ `src/components/manual-input/FormDatePicker.tsx` - Sélecteur de date
+- ✅ `src/components/manual-input/FormMerchant.tsx` - Champ de saisie du commerçant
+- ✅ `src/components/manual-input/FormAmount.tsx` - Champ de saisie du montant
+- ✅ `src/components/manual-input/FormCategory.tsx` - Sélecteur de catégorie
+- ✅ `src/components/manual-input/FormReason.tsx` - Champ de saisie du motif
+
 ## Fonctionnalités simplifiées
 - ✅ Navigation: Retrait de tous les liens et fonctionnalités liées à la capture d'images
 - ✅ Page d'accueil: Simplification pour ne montrer que les options de configuration essentielles
+- ✅ Suppression complète du flux de saisie manuelle des dépenses
 
 ## Recommandations pour améliorations futures
 1. **Optimisation des performances**:
