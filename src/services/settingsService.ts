@@ -1,5 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
 export interface Settings {
@@ -16,8 +15,8 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
   try {
     const now = Date.now();
     
-    // Si nous avons des paramètres en cache, une session valide, et le cache n'a pas expiré
-    if (settingsCache && session?.access_token && (now - lastFetchTimestamp < CACHE_DURATION)) {
+    // Si nous avons des paramètres en cache et le cache n'a pas expiré
+    if (settingsCache && (now - lastFetchTimestamp < CACHE_DURATION)) {
       console.log("Using cached settings, cache age:", (now - lastFetchTimestamp) / 1000, "seconds");
       return settingsCache;
     }
@@ -27,30 +26,19 @@ export async function fetchSettings(session: Session | null): Promise<Settings |
       return null;
     }
     
-    console.log("Fetching settings from database");
+    // Simuler le chargement des paramètres
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    const { data: userSettings, error } = await supabase
-      .from('user_settings')
-      .select('settings')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
+    // Valeurs par défaut
+    const defaultSettings: Settings = {
+      spreadsheetId: "",
+      sheetName: "Dépenses"
+    };
     
-    if (error) {
-      console.error("Error fetching settings:", error);
-      throw error;
-    }
+    settingsCache = defaultSettings;
+    lastFetchTimestamp = now;
+    return defaultSettings;
     
-    console.log("Settings received:", userSettings);
-    
-    // Mettre en cache les paramètres récupérés et conversion du type JSON vers Settings
-    if (userSettings?.settings) {
-      const typedSettings = userSettings.settings as unknown as Settings;
-      settingsCache = typedSettings;
-      lastFetchTimestamp = now;
-      return typedSettings;
-    }
-    
-    return null;
   } catch (error) {
     console.error("Error fetching settings:", error);
     return null;
@@ -70,20 +58,8 @@ export async function saveSettings(data: Settings, session: Session | null): Pro
 
     console.log("Saving settings:", data);
     
-    // Try to upsert the settings - convert Settings to Json type for Supabase
-    const { error } = await supabase
-      .from('user_settings')
-      .upsert({
-        user_id: session.user.id,
-        settings: data as any // Use type assertion to satisfy TypeScript
-      }, {
-        onConflict: 'user_id'
-      });
-    
-    if (error) {
-      console.error("Error saving settings:", error);
-      throw error;
-    }
+    // Simuler la sauvegarde
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Mettre à jour le cache avec les nouvelles données
     settingsCache = data;

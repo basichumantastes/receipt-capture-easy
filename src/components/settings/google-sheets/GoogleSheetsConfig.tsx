@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +16,6 @@ import {
 } from "@/services/googleSheetsService";
 import { SelectedSpreadsheet } from "./SelectedSpreadsheet";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface GoogleSheetsConfigProps {
   defaultValues: Partial<Settings>;
@@ -30,10 +29,9 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
   const [worksheets, setWorksheets] = useState<WorksheetInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingWorksheets, setIsLoadingWorksheets] = useState(false);
-  const [apiStatus, setApiStatus] = useState<GoogleApiStatus>(GoogleApiStatus.NEEDS_AUTH);
-  const dataFetchedRef = useRef(false);
+  const [apiStatus, setApiStatus] = useState<GoogleApiStatus>(GoogleApiStatus.READY);
   
-  const getSpreadsheets = useCallback(async () => {
+  const getSpreadsheets = async () => {
     if (!session) return;
     
     setIsLoading(true);
@@ -53,9 +51,9 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  };
   
-  const getWorksheets = useCallback(async (spreadsheetId: string) => {
+  const getWorksheets = async (spreadsheetId: string) => {
     if (!session || !spreadsheetId) return;
     
     setIsLoadingWorksheets(true);
@@ -70,22 +68,19 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     } finally {
       setIsLoadingWorksheets(false);
     }
+  };
+  
+  // Charger les spreadsheets au chargement
+  useEffect(() => {
+    getSpreadsheets();
   }, [session]);
   
-  // Use useEffect with ref to avoid double loading
-  useEffect(() => {
-    if (!dataFetchedRef.current) {
-      getSpreadsheets();
-      dataFetchedRef.current = true;
-    }
-  }, [getSpreadsheets]);
-  
-  // Load worksheets only when spreadsheetId changes
+  // Charger les worksheets quand le spreadsheetId change
   useEffect(() => {
     if (defaultValues.spreadsheetId) {
       getWorksheets(defaultValues.spreadsheetId);
     }
-  }, [defaultValues.spreadsheetId, getWorksheets]);
+  }, [defaultValues.spreadsheetId]);
   
   const handleSelectSpreadsheet = async (spreadsheetId: string, name: string) => {
     await onSubmit({
@@ -114,15 +109,10 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Configuration Google Sheets</span>
-          {apiStatus === GoogleApiStatus.NEEDS_API_ACTIVATION && (
-            <Alert variant="destructive" className="border-none bg-transparent p-0 m-0">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                API Google Drive non activée
-              </AlertDescription>
-            </Alert>
-          )}
         </CardTitle>
+        <CardDescription>
+          Sélectionnez le Google Sheets et l'onglet où stocker vos données
+        </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
@@ -133,7 +123,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
           />
         ) : (
           <p className="text-sm text-muted-foreground">
-            Sélectionnez un Google Sheets pour stocker vos dépenses
+            Sélectionnez un Google Sheets pour stocker vos données
           </p>
         )}
 

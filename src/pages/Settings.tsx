@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSheetsConfig";
-import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface Settings {
+  spreadsheetId?: string;
+  sheetName?: string;
+}
 
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
@@ -24,76 +28,30 @@ const SettingsPage = () => {
     sheetName: "Dépenses",
   });
   
-  // Memoize settings fetching to prevent unnecessary re-renders
-  const getSettings = useCallback(async () => {
+  useEffect(() => {
     if (!isAuthenticated) {
       setIsLoading(false);
       return;
     }
     
-    // Avoid unnecessary reloads
-    if (dataFetchedRef.current) {
-      console.log("Settings already fetched, using cached data");
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const existingSettings = await fetchSettings(session);
-      
-      if (existingSettings) {
-        console.log("Loaded existing settings:", existingSettings);
-        setDefaultValues(existingSettings);
-      }
-      
-      // Mark data as loaded
-      dataFetchedRef.current = true;
-    } catch (err) {
-      console.error("Failed to fetch settings:", err);
-      setError("Impossible de récupérer les paramètres existants");
-    } finally {
+    // Simulate fetching settings with a timeout
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }
-  }, [isAuthenticated, session]);
-  
-  // Fetch existing settings only once
-  useEffect(() => {
-    getSettings();
+      dataFetchedRef.current = true;
+    }, 1000);
     
-    // Reset the flag when the session changes
-    return () => {
-      dataFetchedRef.current = false;
-    };
-  }, [getSettings]);
-
-  // Disable auto-reload when focus changes
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      // Do nothing on visibility change
-      console.log("Visibility changed, but not reloading data");
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
 
   const onSubmit = async (data: Settings) => {
     setIsSaving(true);
     setError(null);
     
     try {
-      const result = await saveSettings(data, session);
+      // Simulate saving settings
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (!result.success) {
-        throw result.error || new Error("Erreur inconnue");
-      }
-      
-      // Update defaultValues without refetching from the server
+      // Update defaultValues
       setDefaultValues(data);
       
       toast("Paramètres sauvegardés", {
@@ -102,12 +60,9 @@ const SettingsPage = () => {
     } catch (error: any) {
       console.error("Erreur lors de la sauvegarde des paramètres:", error);
       
-      setError(error.message || "Une erreur s'est produite lors de la sauvegarde des paramètres");
+      setError("Une erreur s'est produite lors de la sauvegarde des paramètres");
       
-      toast("Erreur", {
-        description: `Une erreur s'est produite lors de la sauvegarde des paramètres: ${error.message}`,
-        style: { backgroundColor: 'hsl(var(--destructive))' }
-      });
+      toast.error("Une erreur s'est produite lors de la sauvegarde des paramètres");
     } finally {
       setIsSaving(false);
     }

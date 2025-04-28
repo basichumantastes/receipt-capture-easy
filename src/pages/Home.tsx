@@ -17,23 +17,29 @@ const Home = () => {
           Configurez facilement votre Google Sheets préféré pour vos besoins personnalisés.
         </p>
         
-        {isAuthenticated ? (
-          <Button 
-            size="lg"
-            onClick={() => navigate("/settings")}
-            className="gap-2"
-          >
-            <Settings className="h-5 w-5" />
-            Configurer mes paramètres
-          </Button>
-        ) : (
-          <Button 
-            size="lg"
-            onClick={() => navigate("/login")}
-          >
-            Se connecter avec Google
-          </Button>
-        )}
+        <div className="space-y-6">
+          {isAuthenticated ? (
+            <Button 
+              size="lg"
+              onClick={() => navigate("/settings")}
+              className="gap-2"
+            >
+              <Settings className="h-5 w-5" />
+              Configurer mes paramètres
+            </Button>
+          ) : (
+            <Button 
+              size="lg"
+              onClick={() => navigate("/login")}
+            >
+              Se connecter avec Google
+            </Button>
+          )}
+          
+          <div className="text-sm text-muted-foreground mt-8">
+            <p>Version simplifiée - Configuration uniquement</p>
+          </div>
+        </div>
       </div>
     </div>
   );
