@@ -12,9 +12,9 @@ const Home = () => {
   return (
     <div className="container py-12">
       <div className="max-w-3xl mx-auto text-center">
-        <h1 className="text-4xl font-bold mb-4">Google Sheets Configuration</h1>
+        <h1 className="text-4xl font-bold mb-4">Receipt Capture Easy</h1>
         <p className="text-xl text-muted-foreground mb-8">
-          Configurez facilement votre Google Sheets préféré pour vos besoins personnalisés.
+          Numérisez vos tickets de caisse et envoyez-les directement à Google Sheets sans effort
         </p>
         
         <div className="space-y-6">
@@ -37,7 +37,7 @@ const Home = () => {
           )}
           
           <div className="text-sm text-muted-foreground mt-8">
-            <p>Version simplifiée - Configuration uniquement</p>
+            <p>Version simplifiée - Capture et envoi de notes de frais</p>
           </div>
         </div>
       </div>
@@ -46,4 +46,3 @@ const Home = () => {
 };
 
 export default Home;
-

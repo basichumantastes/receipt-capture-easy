@@ -20,7 +20,7 @@ const Layout = () => {
         <div className="container flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">
             <Settings className="h-5 w-5 text-primary" />
-            <span>Google Sheets Config</span>
+            <span>Receipt Capture Easy</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -75,7 +75,7 @@ const Layout = () => {
 
       <footer className="border-t py-4">
         <div className="container text-center text-sm text-muted-foreground">
-          Google Sheets Config &copy; {new Date().getFullYear()}
+          Receipt Capture Easy &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>
