@@ -1,182 +1,124 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { FileSpreadsheet, AlertCircle } from "lucide-react";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle,
+  CardFooter
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { Settings } from "@/types/settings";
-import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/types/googleSheets";
-import { SelectedSpreadsheet } from "./SelectedSpreadsheet";
+import { SpreadsheetInfo, listSpreadsheets } from "@/services/googleSheetsService";
+import { GoogleSheetsForm, SettingsFormValues } from "./GoogleSheetsForm";
 import { SpreadsheetSelector } from "./SpreadsheetSelector";
-import { useApi } from "@/hooks/useApi";
-import { toast } from "sonner";
 
 interface GoogleSheetsConfigProps {
-  defaultValues: Partial<Settings>;
-  onSubmit: (data: Settings) => Promise<void>;
+  defaultValues: Partial<SettingsFormValues>;
+  onSubmit: (data: SettingsFormValues) => Promise<void>;
   isSaving: boolean;
 }
 
 export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: GoogleSheetsConfigProps) => {
   const { session } = useAuth();
-  const { useApiQuery, useApiMutation } = useApi();
-  const [isLoadingWorksheets, setIsLoadingWorksheets] = useState(false);
+  const [spreadsheets, setSpreadsheets] = useState<SpreadsheetInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedSpreadsheetId, setSelectedSpreadsheetId] = useState<string | undefined>();
   
-  // Utilisation de React Query pour charger le statut de l'API Google
-  const { 
-    data: apiStatus = GoogleApiStatus.READY,
-    isLoading: isLoadingStatus 
-  } = useApiQuery<GoogleApiStatus>(
-    "google/status",
-    ["googleApiStatus"],
-    { 
-      queryOptions: {
-        enabled: !!session,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }
+  const loadSpreadsheets = async () => {
+    if (!session) {
+      setLoadError("Vous devez être connecté pour charger vos Google Sheets");
+      return;
     }
-  );
-  
-  // Utilisation de React Query pour charger la liste des spreadsheets
-  const { 
-    data: spreadsheets = [], 
-    isLoading: isLoadingSpreadsheets,
-    refetch: refetchSpreadsheets
-  } = useApiQuery<SpreadsheetInfo[]>(
-    "sheets/list", 
-    ["spreadsheets"], 
-    {
-      queryOptions: {
-        enabled: !!session && apiStatus === GoogleApiStatus.READY,
-        staleTime: 2 * 60 * 1000, // 2 minutes
-      },
-      mockDelay: 800
-    }
-  );
-  
-  // Utilisation de React Query pour charger les worksheets
-  const { 
-    data: worksheets = [], 
-    refetch: refetchWorksheets 
-  } = useApiQuery<WorksheetInfo[]>(
-    "sheets/tabs", 
-    ["worksheets", defaultValues.spreadsheetId || ""], 
-    {
-      queryOptions: {
-        enabled: !!session && !!defaultValues.spreadsheetId,
-        staleTime: 2 * 60 * 1000, // 2 minutes
-      },
-      mockDelay: 500
-    }
-  );
-  
-  // Fonction pour rafraîchir les spreadsheets
-  const getSpreadsheets = async () => {
-    try {
-      await refetchSpreadsheets();
-    } catch (error) {
-      console.error("Error refetching spreadsheets:", error);
-    }
-  };
-  
-  // Fonction pour charger les worksheets d'un spreadsheet
-  const getWorksheets = async (spreadsheetId: string) => {
-    if (!session || !spreadsheetId) return;
     
-    setIsLoadingWorksheets(true);
+    setIsLoading(true);
+    setLoadError(null);
+    
     try {
-      await refetchWorksheets();
-    } catch (error) {
-      console.error("Error fetching worksheets:", error);
+      const sheetsList = await listSpreadsheets(session);
+      if (sheetsList) {
+        setSpreadsheets(sheetsList);
+        
+        if (sheetsList.length === 0) {
+          setLoadError("Aucun Google Sheets trouvé dans votre compte. Assurez-vous d'avoir créé au moins un fichier Google Sheets accessible.");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error loading spreadsheets:", error);
+      setLoadError(`Erreur lors du chargement des Google Sheets: ${error.message}`);
     } finally {
-      setIsLoadingWorksheets(false);
+      setIsLoading(false);
     }
   };
   
-  // Charger les worksheets quand le spreadsheetId change
   useEffect(() => {
-    if (defaultValues.spreadsheetId) {
-      getWorksheets(defaultValues.spreadsheetId);
-    }
-  }, [defaultValues.spreadsheetId]);
-  
-  const handleSelectSpreadsheet = async (spreadsheetId: string, name: string) => {
-    await onSubmit({
-      spreadsheetId,
-      sheetName: defaultValues.sheetName || "Dépenses"
-    });
-    getWorksheets(spreadsheetId);
+    loadSpreadsheets();
+  }, [session]);
+
+  const handleSelectSpreadsheet = (spreadsheetId: string) => {
+    setSelectedSpreadsheetId(spreadsheetId);
   };
-
-  const handleSelectWorksheet = async (sheetName: string) => {
-    if (defaultValues.spreadsheetId) {
-      await onSubmit({
-        spreadsheetId: defaultValues.spreadsheetId,
-        sheetName
-      });
-    }
-  };
-
-  const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
-  const isLoading = isLoadingStatus || isLoadingSpreadsheets;
-
-  // Shared classes for consistent visual styling
-  const labelClass = "font-medium";
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>Configuration Google Sheets</span>
-        </CardTitle>
+        <div className="flex items-center gap-2 mb-2">
+          <FileSpreadsheet className="h-5 w-5 text-primary" />
+          <CardTitle>Configuration Google Sheets</CardTitle>
+        </div>
         <CardDescription>
-          Sélectionnez le Google Sheets et l'onglet où stocker vos données
+          Configurez la connexion et le nom de la feuille pour votre Google Sheets
         </CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {selectedSpreadsheet ? (
-          <SelectedSpreadsheet 
-            spreadsheet={selectedSpreadsheet} 
-            spreadsheetId={defaultValues.spreadsheetId || ""} 
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Sélectionnez un Google Sheets pour stocker vos données
-          </p>
+      <CardContent>
+        {loadError && (
+          <Alert variant="default" className="mb-6 bg-orange-50 border-orange-200">
+            <AlertCircle className="h-4 w-4 text-orange-800" />
+            <AlertTitle>Attention</AlertTitle>
+            <AlertDescription className="text-orange-800">{loadError}</AlertDescription>
+          </Alert>
         )}
-
-        <SpreadsheetSelector 
+        
+        <GoogleSheetsForm 
           defaultValues={defaultValues}
-          spreadsheets={spreadsheets}
-          worksheets={worksheets}
-          isLoading={isLoading}
-          isLoadingWorksheets={isLoadingWorksheets}
-          onSelectSpreadsheet={handleSelectSpreadsheet}
-          onSelectWorksheet={handleSelectWorksheet}
-          onRefresh={getSpreadsheets}
-          apiStatus={apiStatus}
-          labelClass={labelClass}
+          onSubmit={onSubmit}
+          isSaving={isSaving}
+          spreadsheetId={selectedSpreadsheetId}
         />
-        
-        {apiStatus === GoogleApiStatus.READY && spreadsheets.length === 0 && !isLoading && (
-          <p className="text-sm text-muted-foreground">
-            Aucun Google Sheets trouvé sur votre compte. Vous pouvez en créer un sur 
-            <a href="https://docs.google.com/spreadsheets" target="_blank" rel="noopener noreferrer" className="text-primary pl-1 hover:underline">
-              Google Sheets
-            </a>
-          </p>
-        )}
-        
-        {isLoading && (
-          <div className="flex items-center pt-2">
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            <span className="text-sm font-medium">Chargement des Google Sheets...</span>
-          </div>
-        )}
       </CardContent>
+      <CardFooter className="flex justify-between border-t pt-6 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <div>
+            {spreadsheets.length > 0 ? (
+              <p>{spreadsheets.length} Google Sheets disponibles</p>
+            ) : isLoading ? (
+              <p>Chargement des Google Sheets...</p>
+            ) : (
+              <p>Aucun Google Sheets trouvé</p>
+            )}
+          </div>
+          <SpreadsheetSelector
+            spreadsheets={spreadsheets}
+            isLoading={isLoading}
+            onSelect={handleSelectSpreadsheet}
+            onRefresh={loadSpreadsheets}
+            selectedId={selectedSpreadsheetId}
+          />
+        </div>
+        <p>
+          <a 
+            href="https://docs.google.com/spreadsheets/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Créer un nouveau Google Sheets
+          </a>
+        </p>
+      </CardFooter>
     </Card>
   );
 };
-

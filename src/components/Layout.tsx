@@ -3,24 +3,19 @@ import React from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Settings, LogOut } from "lucide-react";
+import { ReceiptText, LogOut } from "lucide-react";
 
 const Layout = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-            <Settings className="h-5 w-5 text-primary" />
-            <span>Receipt Capture Easy</span>
+            <ReceiptText className="h-5 w-5 text-expense-blue" />
+            <span>Receipt Capture</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -40,25 +35,10 @@ const Layout = () => {
                     </span>
                   </div>
                 )}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleLogout}
-                >
+                <Button variant="outline" size="sm" onClick={() => logout()}>
                   <LogOut className="h-4 w-4 mr-2" />
                   <span className="hidden md:inline">Déconnexion</span>
                 </Button>
-                
-                {isAuthenticated && (
-                  <Button 
-                    variant="default"
-                    size="sm"
-                    onClick={() => navigate("/settings")}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    <span className="hidden md:inline">Paramètres</span>
-                  </Button>
-                )}
               </>
             ) : (
               <Button onClick={() => navigate("/login")} variant="default" size="sm">

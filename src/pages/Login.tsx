@@ -2,32 +2,25 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const { isAuthenticated, login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Get redirect path from query parameters
   const from = new URLSearchParams(location.search).get('from') || '/';
   
+  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
-
-  const handleLogin = async () => {
-    try {
-      await login();
-      // La redirection sera gérée par l'useEffect
-    } catch (error) {
-      console.error("Login error:", error);
-      // Les erreurs sont déjà gérées dans le hook useAuthSession
-    }
-  };
 
   if (loading) {
     return (
@@ -39,14 +32,33 @@ const Login = () => {
 
   return (
     <div className="container max-w-md py-16">
-      <Card className="w-full shadow-lg">
+      <Card className="w-full">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Connexion</CardTitle>
+          <CardTitle>Connexion</CardTitle>
+          <CardDescription>
+            Connectez-vous avec votre compte Google pour accéder à l'application
+          </CardDescription>
         </CardHeader>
         
-        <CardContent className="flex flex-col items-center">
+        <CardContent className="flex flex-col items-center gap-4">
+          <Alert className="bg-blue-50 border-blue-200 mb-4">
+            <Info className="h-4 w-4 text-blue-800" />
+            <AlertDescription className="text-blue-800">
+              Cette application demande l'accès à Google Sheets et à Google Drive (en lecture seule) 
+              pour fonctionner correctement. Veuillez autoriser ces accès lors de la connexion.
+            </AlertDescription>
+          </Alert>
+          
+          <Alert variant="default" className="bg-amber-50 border-amber-200 mb-4">
+            <Info className="h-4 w-4 text-amber-800" />
+            <AlertDescription className="text-amber-800">
+              Vous serez redirigé vers Supabase (qayxeeuojrmhwrevyapn.supabase.co) pour l'authentification, 
+              puis vers Google pour autoriser l'accès. C'est normal et sécurisé.
+            </AlertDescription>
+          </Alert>
+          
           <Button 
-            onClick={handleLogin}
+            onClick={login}
             className="w-full flex items-center gap-2"
           >
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
@@ -60,6 +72,23 @@ const Login = () => {
             Se connecter avec Google
           </Button>
         </CardContent>
+        
+        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col gap-2">
+          <p>
+            Si vous rencontrez des problèmes d'autorisation, veuillez essayer de 
+            révoquer l'accès à cette application dans votre compte Google et vous reconnecter.
+          </p>
+          <p>
+            <a 
+              href="https://myaccount.google.com/permissions" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-primary hover:underline"
+            >
+              Révoquer les accès dans Google
+            </a>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

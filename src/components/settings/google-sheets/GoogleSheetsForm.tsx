@@ -28,10 +28,9 @@ interface GoogleSheetsFormProps {
   onSubmit: (data: SettingsFormValues) => Promise<void>;
   isSaving: boolean;
   spreadsheetId?: string;
-  disabled?: boolean;
 }
 
-export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadsheetId, disabled }: GoogleSheetsFormProps) => {
+export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadsheetId }: GoogleSheetsFormProps) => {
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues,
@@ -61,7 +60,7 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
               <FormItem>
                 <FormLabel>ID du Google Sheets</FormLabel>
                 <FormControl>
-                  <Input placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" {...field} disabled={disabled} />
+                  <Input placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" {...field} />
                 </FormControl>
                 <FormDescription>
                   L'ID de votre feuille Google Sheets se trouve dans l'URL (entre "d/" et "/edit")
@@ -78,7 +77,7 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
               <FormItem>
                 <FormLabel>Nom de la feuille</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dépenses" {...field} disabled={disabled} />
+                  <Input placeholder="Dépenses" {...field} />
                 </FormControl>
                 <FormDescription>
                   Le nom de l'onglet dans lequel écrire les données
@@ -104,7 +103,7 @@ export const GoogleSheetsForm = ({ defaultValues, onSubmit, isSaving, spreadshee
         </div>
         
         <div className="flex justify-end">
-          <Button type="submit" disabled={isSaving || !form.formState.isValid || disabled}>
+          <Button type="submit" disabled={isSaving || !form.formState.isValid}>
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

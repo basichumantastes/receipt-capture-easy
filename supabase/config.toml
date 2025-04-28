@@ -33,5 +33,3 @@ enabled = true
 [edge_functions.save-settings]
 [edge_functions.get-settings]
 [edge_functions.update-env-vars]
-[edge_functions.list-spreadsheets]
-[edge_functions.list-worksheets]

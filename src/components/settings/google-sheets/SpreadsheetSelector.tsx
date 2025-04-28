@@ -1,149 +1,198 @@
 
-import React, { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import React from 'react';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { GoogleApiStatus, SpreadsheetInfo, WorksheetInfo } from "@/types/googleSheets";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
+import { Check, Loader2, RefreshCcw, Search, AlertCircle, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { SpreadsheetInfo } from "@/services/googleSheetsService";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface SpreadsheetSelectorProps {
-  defaultValues: {
-    spreadsheetId?: string;
-    sheetName?: string;
-  };
   spreadsheets: SpreadsheetInfo[];
-  worksheets: WorksheetInfo[];
   isLoading: boolean;
-  isLoadingWorksheets: boolean;
-  onSelectSpreadsheet: (id: string, name: string) => void;
-  onSelectWorksheet: (name: string) => void;
+  onSelect: (id: string, name: string) => void;
   onRefresh: () => void;
-  apiStatus: GoogleApiStatus;
-  labelClass?: string;
+  selectedId?: string;
 }
 
 export const SpreadsheetSelector = ({
-  defaultValues,
   spreadsheets,
-  worksheets,
   isLoading,
-  isLoadingWorksheets,
-  onSelectSpreadsheet,
-  onSelectWorksheet,
+  onSelect,
   onRefresh,
-  apiStatus,
-  labelClass = "font-medium"
+  selectedId
 }: SpreadsheetSelectorProps) => {
-  const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Filter spreadsheets based on search query
-  const filteredSpreadsheets = spreadsheets.filter(sheet => 
-    sheet.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [open, setOpen] = React.useState(false);
+  const { session, hasRequiredScopes, login } = useAuth();
+  
+  // Check if Google token is available
+  const googleToken = session?.provider_token;
+  const hasGoogleToken = !!googleToken;
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex justify-between items-center">
-        <label htmlFor="spreadsheet" className={labelClass}>
-          Sélectionner un Google Sheets
-        </label>
-        
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" disabled={apiStatus !== GoogleApiStatus.READY || isLoading}>
-              Choisir
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Sélectionner un Google Sheets</SheetTitle>
-            </SheetHeader>
-            
-            {/* Search field */}
-            <div className="py-4">
-              <div className="flex items-center border rounded-md px-3 mb-4">
-                <Search className="h-4 w-4 mr-2 opacity-50" />
-                <Input 
-                  placeholder="Rechercher un Google Sheets..." 
-                  className="flex h-9 w-full rounded-md border-0 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+    <div className="flex gap-2 items-center">
+      {(!hasGoogleToken || !hasRequiredScopes) && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-amber-500 mr-1" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={login} 
+                  className="text-xs px-2 py-0 h-6"
+                >
+                  Reconnexion requise
+                </Button>
               </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Autorisations Google insuffisantes. Veuillez vous reconnecter avec le bouton ci-contre.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-xs px-2 py-0 h-6 flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Google Cloud
+          </Button>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Configuration Google Cloud</SheetTitle>
+            <SheetDescription>
+              Votre application n'est pas encore en production sur Google Cloud. 
+              Suivez ces étapes pour configurer l'accès à l'API Google Drive:
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-4">
+            <div className="space-y-2">
+              <h3 className="font-medium">1. Activer l'API Google Drive</h3>
+              <p className="text-sm text-muted-foreground">
+                Vous devez activer l'API Google Drive dans votre console Google Cloud
+                pour pouvoir accéder à vos spreadsheets.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.open("https://console.developers.google.com/apis/api/drive.googleapis.com/overview", "_blank")}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" /> Aller à la console Google Cloud
+              </Button>
             </div>
             
-            <div className="py-2">
-              {filteredSpreadsheets.length > 0 ? (
-                <ScrollArea className="h-[300px] pr-4">
-                  <ul className="space-y-2">
-                    {filteredSpreadsheets.map((sheet) => (
-                      <li key={sheet.id}>
-                        <button
-                          onClick={() => {
-                            onSelectSpreadsheet(sheet.id, sheet.name);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-md hover:bg-accent ${
-                            sheet.id === defaultValues.spreadsheetId
-                              ? "bg-accent"
-                              : ""
-                          }`}
-                        >
-                          <div className="font-medium">{sheet.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(sheet.createdTime).toLocaleDateString()}
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              ) : searchQuery ? (
-                <p className="text-muted-foreground">
-                  Aucun Google Sheets ne correspond à votre recherche
-                </p>
-              ) : (
-                <p className="text-muted-foreground">
-                  Aucun Google Sheets trouvé sur votre compte
-                </p>
-              )}
+            <div className="space-y-2">
+              <h3 className="font-medium">2. Configurer les écrans de consentement et d'autorisation</h3>
+              <p className="text-sm text-muted-foreground">
+                Assurez-vous que votre application est correctement configurée dans la 
+                console Google Cloud, notamment les écrans de consentement et les domaines autorisés.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.open("https://console.cloud.google.com/apis/credentials", "_blank")}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" /> Gérer les identifiants OAuth
+              </Button>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+            
+            <div className="space-y-2">
+              <h3 className="font-medium">3. Se reconnecter à l'application</h3>
+              <p className="text-sm text-muted-foreground">
+                Une fois les API activées, reconnectez-vous à l'application pour 
+                obtenir un nouveau jeton d'accès avec les bonnes permissions.
+              </p>
+              <Button
+                onClick={login}
+                className="mt-2"
+                size="sm"
+              >
+                Se reconnecter
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
       
-      {selectedSpreadsheet && (
-        <div className="flex justify-between items-center">
-          <label htmlFor="worksheet" className={labelClass}>
-            Sélectionner un onglet
-          </label>
-          <Select
-            value={defaultValues.sheetName}
-            onValueChange={onSelectWorksheet}
-            disabled={isLoadingWorksheets || !worksheets.length}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            type="button"
+            aria-expanded={open}
+            className="w-10 p-0"
+            disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
           >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Sélectionner l'onglet" />
-            </SelectTrigger>
-            <SelectContent>
-              {worksheets.map((sheet) => (
-                <SelectItem key={sheet.index} value={sheet.title}>
-                  {sheet.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0" align="start" side="bottom">
+          <Command>
+            <CommandInput placeholder="Rechercher un spreadsheet..." />
+            <CommandList>
+              <CommandEmpty>Aucun spreadsheet trouvé</CommandEmpty>
+              <CommandGroup>
+                {spreadsheets.map((sheet) => (
+                  <CommandItem
+                    key={sheet.id}
+                    value={sheet.id}
+                    onSelect={() => {
+                      onSelect(sheet.id, sheet.name);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        sheet.id === selectedId
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    <span className="truncate">{sheet.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
       
-      {isLoadingWorksheets && (
-        <div className="flex items-center pt-2">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          <span className="text-sm font-medium">Chargement des onglets...</span>
-        </div>
-      )}
+      <Button 
+        variant="outline" 
+        type="button"
+        className="w-10 p-0"
+        onClick={onRefresh}
+        disabled={isLoading || !hasGoogleToken || !hasRequiredScopes}
+        title="Rafraîchir la liste"
+      >
+        <RefreshCcw className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
