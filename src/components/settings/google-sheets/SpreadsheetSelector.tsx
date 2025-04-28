@@ -39,7 +39,7 @@ export const SpreadsheetSelector = ({
   const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filtrer les spreadsheets en fonction de la recherche
+  // Filter spreadsheets based on search query
   const filteredSpreadsheets = spreadsheets.filter(sheet => 
     sheet.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -62,7 +62,7 @@ export const SpreadsheetSelector = ({
               <SheetTitle>Sélectionner un Google Sheets</SheetTitle>
             </SheetHeader>
             
-            {/* Champ de recherche */}
+            {/* Search field */}
             <div className="py-4">
               <div className="flex items-center border rounded-md px-3 mb-4">
                 <Search className="h-4 w-4 mr-2 opacity-50" />
@@ -110,16 +110,6 @@ export const SpreadsheetSelector = ({
                 </p>
               )}
             </div>
-            
-            <Button
-              variant="outline"
-              onClick={onRefresh}
-              disabled={isLoading}
-              className="mt-4"
-            >
-              {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Actualiser la liste
-            </Button>
           </SheetContent>
         </Sheet>
       </div>

@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, RefreshCwIcon } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Settings } from "@/services/settingsService";
 import { 
@@ -72,7 +72,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     }
   }, [session]);
   
-  // Utiliser useEffect avec ref pour éviter les doubles chargements
+  // Use useEffect with ref to avoid double loading
   useEffect(() => {
     if (!dataFetchedRef.current) {
       getSpreadsheets();
@@ -80,7 +80,7 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
     }
   }, [getSpreadsheets]);
   
-  // Charger les worksheets seulement quand l'ID du spreadsheet change
+  // Load worksheets only when spreadsheetId changes
   useEffect(() => {
     if (defaultValues.spreadsheetId) {
       getWorksheets(defaultValues.spreadsheetId);
@@ -106,8 +106,8 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
 
   const selectedSpreadsheet = spreadsheets.find(sheet => sheet.id === defaultValues.spreadsheetId);
 
-  // Classes partagées pour assurer une cohérence visuelle
-  const labelClass = "font-medium"; // Toujours en gras, qu'on soit en chargement ou pas
+  // Shared classes for consistent visual styling
+  const labelClass = "font-medium";
 
   return (
     <Card>
@@ -166,30 +166,6 @@ export const GoogleSheetsConfig = ({ defaultValues, onSubmit, isSaving }: Google
           </div>
         )}
       </CardContent>
-      
-      <CardFooter className="flex justify-between border-t pt-4 pb-2">
-        <div className="text-sm text-muted-foreground">
-          {defaultValues.spreadsheetId ? (
-            <span>Spreadsheet ID: {defaultValues.spreadsheetId.substring(0, 6)}...</span>
-          ) : (
-            <span>Aucun spreadsheet sélectionné</span>
-          )}
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={getSpreadsheets}
-          disabled={isLoading || apiStatus !== GoogleApiStatus.READY}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <RefreshCwIcon className="h-4 w-4 mr-2" />
-          )}
-          Actualiser
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

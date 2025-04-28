@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { clearSettingsCache } from "@/services/settingsService";
 
-// Scopes requis pour l'application
+// Required scopes for the application
 const REQUIRED_SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/drive.readonly'
@@ -18,7 +18,7 @@ export const useAuthSession = () => {
   const [hasRequiredScopes, setHasRequiredScopes] = useState<boolean>(false);
   const isAuthenticated = !!user;
 
-  // Vérifier si le token a les scopes nécessaires
+  // Check if token has required scopes
   const checkScopes = (currentSession: Session | null) => {
     const hasToken = !!currentSession?.provider_token;
     setHasRequiredScopes(hasToken);
@@ -66,7 +66,7 @@ export const useAuthSession = () => {
 
   const login = async () => {
     try {
-      // Forcer la déconnexion avant de se reconnecter pour s'assurer que tous les scopes sont demandés
+      // Force logout before reconnecting to ensure all scopes are requested
       await supabase.auth.signOut();
       clearSettingsCache();
       
@@ -87,8 +87,8 @@ export const useAuthSession = () => {
       
       if (error) throw error;
     } catch (error: any) {
-      console.error("Erreur de connexion:", error);
-      toast.error(`Échec de l'authentification: ${error.message}`);
+      console.error("Login error:", error);
+      toast.error(`Authentication failed: ${error.message}`);
     }
   };
 
@@ -107,9 +107,9 @@ export const useAuthSession = () => {
       
       clearSettingsCache();
     } catch (error: any) {
-      console.error("Erreur de déconnexion:", error);
+      console.error("Logout error:", error);
       
-      // Nettoyer l'état local en cas d'erreur
+      // Clean up local state in case of error
       setSession(null);
       setUser(null);
       clearSettingsCache();

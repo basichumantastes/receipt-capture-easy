@@ -1,70 +1,80 @@
 
-# Rapport de nettoyage du code
+# Projet Receipt Capture - Rapport de Nettoyage
 
-## Résumé des modifications
+## Résumé des actions
 
-Ce rapport détaille les opérations de nettoyage effectuées sur le code de l'application Receipt Capture pour ne conserver que les fonctionnalités essentielles tout en améliorant l'architecture.
+Ce rapport détaille les modifications effectuées pour nettoyer et simplifier le code du projet Receipt Capture, en ne conservant que les fonctionnalités essentielles : authentification Google, affichage/sélection des Google Spreadsheets et sauvegarde des paramètres dans Supabase.
 
-## Fichiers supprimés
+### Fonctionnalités supprimées
 
-- `src/pages/Submit.tsx` - Page de soumission des reçus (fonctionnalité non conservée)
-- `src/components/capture/CameraView.tsx` - Composant de capture photo (fonctionnalité non conservée)
-- Tous les composants liés à la saisie manuelle dans `src/components/manual-input/`
-- Scripts liés aux raccourcis iOS
-- Code d'intégration avec Google App Script
+1. ✅ Capture de photos et tous les composants associés
+2. ✅ Fonctionnalités relatives aux raccourcis iOS
+3. ✅ Intégration avec Google Apps Script
+4. ✅ Fonctionnalités d'envoi de données vers les spreadsheets
 
-## Fonctionnalités essentielles conservées
+### Modifications majeures
 
-1. **Authentification Google**
-   - Authentification complète via Google OAuth
-   - Gestion des sessions et des tokens
-   - Contrôle des accès pour routes protégées
+#### Composants simplifiés
 
-2. **Listing des Google Spreadsheets**
-   - Récupération de la liste des Google Sheets de l'utilisateur
-   - Filtrage et recherche parmi les spreadsheets disponibles
+- **Page Paramètres**
+  - Suppression de l'affichage du Spreadsheet ID en bas de page
+  - Suppression du bouton "Actualiser" 
+  - Conservation uniquement du panneau de sélection et d'affichage de spreadsheet
 
-3. **Sélection du Spreadsheet**
-   - Interface pour choisir un spreadsheet et un onglet spécifique
-   - Prévisualisation et lien vers le spreadsheet sélectionné
+- **Barre de navigation**
+  - Suppression du bouton "Paramètres" redondant
+  - Conservation uniquement des fonctions d'authentification et de navigation essentielles
 
-4. **Enregistrement des paramètres utilisateur**
-   - Sauvegarde des préférences utilisateur dans Supabase
-   - Caching des paramètres pour optimiser les performances
+- **Page d'accueil**
+  - Simplification du message et des options disponibles
+  - Conservation uniquement du bouton de configuration pour les utilisateurs authentifiés
 
-## Modifications d'architecture
+#### Structure et architecture
 
-1. **Simplification de la structure**
-   - Réduction des composants au strict nécessaire
-   - Séparation claire entre les différents modules fonctionnels
-   - Élimination des dépendances circulaires
+- **Hooks**
+  - Nettoyage du hook `useAuthSession` pour ne garder que les fonctionnalités d'authentification essentielles
 
-2. **Optimisation des hooks**
-   - `useAuthSession` simplifié pour ne gérer que l'authentification
-   - Élimination des hooks redondants
+- **Services**
+  - Conservation des appels API essentiels pour les spreadsheets et la sauvegarde des paramètres
 
-3. **Amélioration de la gestion d'état**
-   - Cache des paramètres utilisateur pour réduire les appels API
-   - Meilleure gestion des erreurs et des états de chargement
+- **Documentation**
+  - Mise à jour du README pour refléter uniquement les fonctionnalités actives et les instructions d'installation pertinentes
 
-4. **Suppression des fonctionnalités non essentielles**
-   - Toute la logique de capture et d'analyse de reçus a été supprimée
-   - Les composants d'interface utilisateur liés ont également été retirés
+### Fichiers modifiés
+
+1. `src/pages/Settings.tsx` - Simplifié pour enlever les fonctionnalités superflues
+2. `src/components/settings/google-sheets/GoogleSheetsConfig.tsx` - Suppression de l'affichage ID et du bouton d'actualisation
+3. `src/components/Layout.tsx` - Suppression du bouton Paramètres redondant
+4. `src/hooks/useAuthSession.ts` - Optimisations et nettoyage
+5. `README.md` - Mise à jour pour refléter uniquement les fonctionnalités conservées
+
+### Fichiers supprimés
+
+Toute la logique et les composants liés à:
+- Capture d'images
+- Raccourcis iOS
+- Envoi de données vers les spreadsheets
+- Google Apps Script
 
 ## Recommandations pour la suite
 
 1. **Tests unitaires**
-   - Implémenter des tests unitaires pour les composants clés
-   - Tester particulièrement le flux d'authentification et la gestion des spreadsheets
+   - Mettre en place des tests pour les hooks d'authentification
+   - Tester les flux de configuration des paramètres
 
-2. **Documentation**
-   - Documenter les points d'intégration avec l'API Google
-   - Ajouter des commentaires JSDoc aux fonctions principales
+2. **Améliorations possibles**
+   - Refactoriser davantage les composants settings pour mieux séparer présentation et logique
+   - Améliorer la gestion d'erreurs et les messages utilisateur
+   - Internationalisation pour supporter plusieurs langues
 
-3. **Amélioration de l'UX**
-   - Améliorer le feedback visuel lors des opérations longues
-   - Ajouter des guides d'utilisation pour les nouveaux utilisateurs
+3. **Performance**
+   - Implémenter le chargement différé (lazy loading) pour les composants secondaires
+   - Utiliser la mise en cache pour les appels API moins fréquents
 
-4. **Refactoring futur**
-   - Considérer l'utilisation de React Query pour toutes les requêtes API
-   - Envisager une migration vers une architecture basée sur les composants serveur (Next.js)
+4. **Sécurité**
+   - Effectuer un audit complet des permissions OAuth
+   - Examiner les règles RLS (Row Level Security) de Supabase
+
+5. **Accessibilité**
+   - Améliorer la navigabilité au clavier
+   - Ajouter des attributs ARIA appropriés

@@ -8,7 +8,6 @@ import { GoogleSheetsConfig } from "@/components/settings/google-sheets/GoogleSh
 import { fetchSettings, saveSettings, Settings } from "@/services/settingsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const SettingsPage = () => {
   const { isAuthenticated, session } = useAuth();
@@ -31,7 +30,7 @@ const SettingsPage = () => {
       return;
     }
     
-    // Éviter les rechargements inutiles
+    // Avoid unnecessary reloads
     if (dataFetchedRef.current) {
       console.log("Settings already fetched, using cached data");
       return;
@@ -48,7 +47,7 @@ const SettingsPage = () => {
         setDefaultValues(existingSettings);
       }
       
-      // Marquer les données comme chargées
+      // Mark data as loaded
       dataFetchedRef.current = true;
     } catch (err) {
       console.error("Failed to fetch settings:", err);
@@ -62,16 +61,16 @@ const SettingsPage = () => {
   useEffect(() => {
     getSettings();
     
-    // Récupérer les paramètres quand la session change
+    // Reset the flag when the session changes
     return () => {
       dataFetchedRef.current = false;
     };
   }, [getSettings]);
 
-  // Désactiver le rechargement automatique quand le focus change
+  // Disable auto-reload when focus changes
   useEffect(() => {
     const handleVisibilityChange = () => {
-      // Ne rien faire lors du changement de visibilité
+      // Do nothing on visibility change
       console.log("Visibility changed, but not reloading data");
     };
     
@@ -127,7 +126,7 @@ const SettingsPage = () => {
     );
   }
 
-  // Utiliser la même classe de style pour les titres, qu'on soit en chargement ou pas
+  // Use the same style class for titles, whether loading or not
   const labelClass = "text-3xl font-bold tracking-tight mb-8";
 
   return (
@@ -149,7 +148,7 @@ const SettingsPage = () => {
             <span className="text-lg font-medium">Chargement des paramètres...</span>
           </div>
           
-          {/* Skeleton des composants de paramètres pour garder la même structure visuelle */}
+          {/* Skeleton for parameter components to maintain visual structure */}
           <div className="border rounded-lg p-6 space-y-4">
             <div className="flex justify-between items-center">
               <Skeleton className="h-7 w-56" />
@@ -158,7 +157,6 @@ const SettingsPage = () => {
               <Skeleton className="h-24 w-full" />
               <div className="flex justify-between items-center">
                 <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-9 w-20" />
               </div>
             </div>
           </div>
