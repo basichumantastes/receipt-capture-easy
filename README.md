@@ -41,11 +41,7 @@ Une application simple permettant aux utilisateurs de se connecter via Google et
 
 1. Clonez ce dépôt
 2. Installez les dépendances: `npm install`
-3. Créez un fichier `.env.local` avec les variables nécessaires:
-   ```
-   VITE_SUPABASE_URL=votre_url_supabase
-   VITE_SUPABASE_ANON_KEY=votre_clef_anon_supabase
-   ```
+3. Créez un fichier `.env.local` avec les variables nécessaires
 
 ## Déploiement
 

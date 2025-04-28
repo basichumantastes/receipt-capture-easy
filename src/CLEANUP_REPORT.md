@@ -23,6 +23,20 @@ Ce rapport détaille les actions entreprises pour nettoyer en profondeur le code
 - ✅ `src/components/manual-input/FormCategory.tsx` - Sélecteur de catégorie
 - ✅ `src/components/manual-input/FormReason.tsx` - Champ de saisie du motif
 
+### Templates et API
+- ✅ `src/api/submit.js.template` - Template obsolète pour la soumission des dépenses
+- ✅ `src/api/login.js.template` - Template obsolète pour l'authentification
+
+## Nettoyage du code
+
+### CSS
+- ✅ Suppression de la classe .receipt-scanner-bg de index.css
+- ✅ Nettoyage des styles spécifiques aux composants supprimés
+
+### Documentation
+- ✅ Mise à jour du README.md pour ne refléter que les fonctionnalités essentielles
+- ✅ Suppression des références aux fonctionnalités retirées
+
 ## Fonctionnalités simplifiées
 - ✅ Navigation: Retrait de tous les liens et fonctionnalités liées à la capture d'images
 - ✅ Page d'accueil: Simplification pour ne montrer que les options de configuration essentielles
